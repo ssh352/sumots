@@ -18,8 +18,8 @@
 #' @param scale Scales numeric data by id group using mean = 0, standard deviation = 1 transformation. No info on importance
 
 
-tune_deepar <- function(id, freq, recipe, horizon, splits, length, epochs, cv_slice_limit, assess = "12 weeks",
-                        skip = "4 weeks", initial = "12 months", lookback = NULL, batch_size = NULL,
+tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limit, assess = "12 weeks",
+                        skip = "4 weeks", initial = "12 months", epochs = NULL, lookback = NULL, batch_size = NULL,
                         learn_rate = NULL, num_cells = NULL, num_layers = NULL, scale = NULL) {
 
 

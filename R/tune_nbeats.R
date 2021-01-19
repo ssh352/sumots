@@ -19,9 +19,9 @@
 #'
 #'
 
-tune_nbeats <- function(id, freq, recipe, splits, horizon, length, epochs, cv_slice_limit, assess = "12 weeks",
-                        skip = "4 weeks", initial = "12 months", lookback = NULL, bagging_size = NULL,
-                        learn_rate = NULL, loss_function = NULL, scale = NULL) {
+tune_nbeats <- function(id, freq, recipe, splits, horizon, length, cv_slice_limit, assess = "12 weeks",
+                        skip = "4 weeks", initial = "12 months", epochs = NULL, lookback = NULL, bagging_size = NULL,
+                        learn_rate = NULL, loss_function = NULL, scale = NULL, batch_size = NULL) {
 
 
     nbeats_grid <- data.frame(

@@ -11,11 +11,11 @@ tune_deepar(
   horizon,
   splits,
   length,
-  epochs,
   cv_slice_limit,
   assess = "12 weeks",
   skip = "4 weeks",
   initial = "12 months",
+  epochs = NULL,
   lookback = NULL,
   batch_size = NULL,
   learn_rate = NULL,
@@ -35,8 +35,6 @@ tune_deepar(
 
 \item{length}{The number of distinct hyperparameter for each tunable parameter}
 
-\item{epochs}{Number of epochs. Importance 1 of 7}
-
 \item{cv_slice_limit}{How many slice/folds in the tsCV}
 
 \item{assess}{The number of samples used for each assessment resample}
@@ -44,6 +42,8 @@ tune_deepar(
 \item{skip}{A integer indicating how many (if any) additional resamples to skip to thin the total amount of data points in the analysis resample.}
 
 \item{initial}{The number of samples used for analysis/modeling in the initial resample.}
+
+\item{epochs}{Number of epochs. Importance 1 of 7}
 
 \item{lookback}{Lookback length. If NULL, will be randomly chosen. Importance 2 of 7}
 
