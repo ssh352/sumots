@@ -1,0 +1,51 @@
+#' Find best weights for each model in an ensemble
+#'
+#' @param submodels Modeltable with models to average
+#' @param n_weight Number of different weights per weight. Example: n_weight = 3 means expand_grid(w1 = 0:3, w2 = 0:3) for two models
+
+
+best_weighted_average <- function(submodels, n_weight) {
+
+    n_models <- nrow(submodels)
+    weight_name <- paste0("w", 1:n_models)
+
+    mat <- matrix(rep(0:n_weight, n_models), ncol = n_models)
+    df_mat <- as.data.frame(mat)
+    df_grid <- expand.grid(df_mat)
+    names(df_grid) <- weight_name
+
+    df_grid$count_zero <- rowSums(df_grid == 0)
+
+    df_grid <- df_grid %>%
+        filter(count_zero < 2) %>%
+        select(-count_zero)
+
+
+    error_list <- list()
+    for (i in 1:nrow(df_grid)) {
+        model_ensemble <- submodels %>%
+            ensemble_weighted(loadings = as.numeric(df_grid[i, ])) %>%
+            modeltime_table()
+
+        error_list[[i]] <- model_ensemble %>%
+            modeltime_accuracy(testing(splits)) %>%
+            add_column(weight_row = paste0(i))
+    }
+
+    weights_row_use <- error_list %>%
+        bind_rows() %>%
+        arrange(mase) %>%
+        slice(1) %>%
+        pull(weight_row)
+
+    weights_use <- as.numeric(df_grid[weights_row_use, ])
+
+    # Final model
+
+    model_ensemble_weighted <- submodels %>%
+        ensemble_weighted(loadings = weights_use) %>%
+        modeltime_table()
+
+    return(model_ensemble_weighted)
+
+}
