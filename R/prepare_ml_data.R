@@ -1,0 +1,342 @@
+#' Prepares data for modeling
+#'
+#' @param data Data frame with data on the right date format e.g. daily, weekly, monthly and with the categorical variables that should be included
+#' @param outcome_var Name of the outcome variable. The function will change the outcome variable name to 'outcome'
+#' @param negative_to_zero Recodes negative values as zero, defaults to TRUE
+#' @param max_gap_size The maximum length that the outcome can be zero. If the interval is larger than max_gap_size then only use data after the interval
+#' @param trailing_zero Extends all time series, back and forward, so they will be the same length. Defaults to FALSE
+#' @param transformation Should the series be transformed, e.g. log or log1p. Defaults to none
+#' @param use_holidays Should national holidays be included. As of now this has to be a dataframe supplied by the user to the holidays_to_use argument
+#' @param holidays_to_use Data frame of holidays. Outcome of the create_holiday() function: fridagar_tbl
+#' @param use_covid Should information on covid be used. Data frame has to be supplied by user to the covid_data argument
+#' @param covid_data Data frame to capture the effect of covid. Has to include one date column and one covid column
+#' @param horizon The forecast horizon
+#' @param clean Should the data be cleand for outliers. Defaults to FALSE
+#' @param use_holiday_to_clean Uses fridagar_one_var from the create_holiday() function to revert series to original value if cleand
+#' @param pacf_threshold Threshold for where to cut the PACF to choose terms for the fourier calculation
+#' @param no_fourier_terms Number of fourier terms, defultas to 5
+#' @param fourier_k The fourier term order, defaults to 5
+#' @param slidify_period The window size, defaults to c(4, 8)
+#'
+#' @return List with data_prepared, future_data, train_data, splits and horizon
+
+
+data_prep_func <- function(data, outcome_var, negative_to_zero = TRUE, max_gap_size = 52, trailing_zero = FALSE, transformation = "none",
+                           use_holidays = TRUE, holidays_to_use, use_covid = TRUE, covid_data, horizon = 12, clean = FALSE,
+                           use_holiday_to_clean = TRUE, holiday_for_clean, pacf_threshold = 0.2, no_fourier_terms = 5, fourier_k = 5,
+                           slidify_period = c(4, 8)) {
+
+    # return list
+    return_list <- list()
+
+
+    # Rename outcome
+    df <- data %>%
+        rename("outcome" = outcome_var)
+
+
+    # Negative values
+    if(negative_to_zero) {
+        df <- df %>%
+            mutate(outcome = ifelse(outcome < 0 , 0, outcome))
+
+    } else {
+        df
+    }
+
+
+    # Gap size
+    df <- df %>%
+        complete(id, date) %>%
+        mutate(outcome = ifelse(is.na(outcome), 0, outcome)) %>%
+        fill(-outcome, .direction = "down") %>%
+        group_by(id) %>%
+
+        # leading zeros first
+        mutate(cumsum_sala = cumsum(outcome)) %>%
+        filter(cumsum_sala > 0) %>%
+
+        # choose only items with sales in the past 52 weeks
+        mutate(no_sala = ifelse(outcome == 0, 1, 0)) %>%
+        mutate(cum_no_sala = rollapplyr(no_sala, width = max_gap_size, FUN = sum, partial = TRUE),
+               indicator = case_when(
+                   lag(cum_no_sala) == max_gap_size & outcome > 0 ~ 1,
+                   all(cum_no_sala < max_gap_size) ~ 1,
+                   TRUE ~ 0),
+               cum_indicator = cumsum(indicator)) %>%
+        filter(cum_indicator >= 1) %>%
+        select(-c(cumsum_sala, no_sala, cum_no_sala, indicator, cum_indicator)) %>%
+        ungroup()
+
+
+    # Trailing zeros
+    if(trailing_zero) {
+        df <- df %>%
+            complete(id, date) %>%
+            group_by(id) %>%
+            fill(-outcome, .direction = "up") %>%
+            fill(-outcome, .direction = "down") %>%
+            ungroup() %>%
+            mutate(outcome = ifelse(is.na(outcome), 0 , outcome))
+    } else {
+
+        df <- df %>%
+            complete(id, date) %>%
+            # Hendi út trailing zeros
+            mutate(outcome = ifelse(is.na(outcome), 0, outcome),
+                   zero_helper = ifelse(outcome == 0, 0, 1)) %>%
+            group_by(id) %>%
+            mutate(cumsum_zero = cumsum(zero_helper)) %>%
+            filter(cumsum_zero > 0) %>%
+            ungroup() %>%
+            # drop_na(ft) %>%
+            select(-contains("zero"), -contains("cumsum"))
+
+    }
+
+    # Transformations
+    if(transformation == "none") {
+        df
+    } else if (transformation == "log") {
+        df <- df %>%
+            mutate(outcome = log(outcome))
+    } else if (transformation == "log1p") {
+        df <- df %>%
+            mutate(outcome = log1p(outcome))
+    }
+
+
+    # Future and prepared data
+    df <- df %>%
+        mutate(id = as_factor(id)) %>%
+        group_by(id) %>%
+        future_frame(date, .length_out = horizon, .bind_data = TRUE) %>%
+        fill(-outcome, .direction = "down") %>%
+        ungroup()
+
+
+    # Holidays
+    if (use_holidays) {
+        df <- df %>% left_join(holidays_to_use)
+    } else {
+        df
+    }
+
+
+    # Covid
+    if (use_covid) {
+        df <- df %>% left_join(covid_data) %>%
+            mutate(covid = ifelse(is.na(covid_dummy), 0, covid_dummy)) %>%
+            select(-covid_dummy)
+    } else {
+        df
+    }
+
+
+    # Fourier period
+    fourier_periods <- df %>%
+        filter(abc %in% c("a", "b")) %>%
+        group_by(id) %>%
+        tk_acf_diagnostics(date, outcome) %>%
+        ungroup() %>%
+        filter(abs(PACF) > pacf_threshold) %>%
+        count(lag) %>%
+        arrange(desc(n)) %>%
+        filter(lag > 1) %>%
+        dplyr::slice(1:no_fourier_terms) %>%
+        pull(lag)
+
+    fourier_periods <- c(fourier_periods, 52/2,  52)
+    fourier_periods <- unique(fourier_periods)
+
+
+    # Full data
+
+    full_data_tbl <- df %>%
+        group_by(id) %>%
+        tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+        tk_augment_lags(.value = outcome, .lags = horizon) %>%
+        tk_augment_slidify(
+            contains("_lag"),
+            .f = ~mean(.x, na.rm = TRUE),
+            .period  = slidify_period,
+            .partial = TRUE,
+            .align   = "center"
+        ) %>%
+        ungroup() %>%
+        rowid_to_column(var = "rowid")
+
+    # if (recursive) {
+    #     # Vinn aðeins með stærstu vörurnar (pareto-pareto)
+    #     top_products <- data %>%
+    #         filter(date >= "2020-01-01") %>%
+    #         group_by(id) %>%
+    #         summarise(outcome = sum(outcome)) %>%
+    #         arrange(desc(outcome)) %>%
+    #         dplyr::slice(1:recursive_top) %>%
+    #         pull(id)
+    #
+    #     full_data_tbl <- df %>%
+    #         filter(id %in% top_products) %>%
+    #         group_by(id) %>%
+    #         tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+    #         tk_augment_lags(.value = outcome, .lags = 1:horizon) %>%
+    #         tk_augment_slidify(
+    #             contains("_lag"),
+    #             .f = ~mean(.x, na.rm = TRUE),
+    #             .period  = slidify_period,
+    #             .partial = TRUE,
+    #             .align   = "center"
+    #         ) %>%
+    #         ungroup() %>%
+    #         rowid_to_column(var = "rowid")
+    #
+    # } else {
+    #     full_data_tbl <- df %>%
+    #         group_by(id) %>%
+    #         tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+    #         tk_augment_lags(.value = outcome, .lags = horizon) %>%
+    #         tk_augment_slidify(
+    #             contains("_lag"),
+    #             .f = ~mean(.x, na.rm = TRUE),
+    #             .period  = slidify_period,
+    #             .partial = TRUE,
+    #             .align   = "center"
+    #         ) %>%
+    #         ungroup() %>%
+    #         rowid_to_column(var = "rowid")
+    # }
+
+
+
+    # data prepared
+    data_prepared_tbl <- full_data_tbl %>%
+        filter(!is.na(outcome)) %>%
+        drop_na()
+
+
+    # Future data
+    future_data <- full_data_tbl %>%
+        filter(is.na(outcome))
+
+
+    # address nan and na in variables _lag
+    future_data <- future_data %>%
+        mutate(across(.cols = contains("_lag"),
+                      .fns = ~ ifelse(is.nan(.x), NA, .x))) %>%
+        mutate(across(.cols = contains("_lag"),
+                      .fns  = ~ replace_na(.x, 0)))
+
+    # Split
+    splits <- data_prepared_tbl %>%
+        time_series_split(date, assess = horizon, cumulative = TRUE)
+
+
+    # Train data
+    if(clean) {
+        if (use_holiday_to_clean) {
+
+            # Create holiday variable to "unclean" series if there is a holiday
+            date_variable <- seq.Date(from = as.Date("1990-01-01"),
+                                      to   = as.Date("2040-12-31"),
+                                      by   = "day")
+
+            date_tbl <- tibble(date = date_variable)
+
+            holiday_clean_date <- date_tbl %>%
+                mutate(date = floor_date(date, "week", week_start = 1)) %>%
+                distinct() %>%
+                left_join(holiday_for_clean) %>%
+                mutate(holiday = ifelse(is.na(value), 0, 1)) %>%
+                mutate(lead_holiday = lead(holiday),
+                       lag_holiday  = lag(holiday)) %>%
+                replace(is.na(.), 0) %>%
+                mutate(value = rowSums(. [2:4])) %>%
+                mutate(value = ifelse(value == 0, 0, 1)) %>%
+                select(-contains("holiday")) %>%
+                rename("holiday" = "value")
+
+            if (transformation == "log") {
+                train_data <- training(splits) %>%
+                    group_by(id) %>%
+                    mutate(cumsum_zero = cumsum(outcome)) %>%
+                    filter(cumsum_zero > 0) %>%
+                    mutate(outcome = exp(outcome)) %>%
+                    mutate(outcome_clean = ts_clean_vec(outcome)) %>%
+                    left_join(holiday_clean_date) %>%
+                    mutate(holiday = ifelse(is.na(holiday), 0, 1)) %>%
+                    mutate(outcome = case_when(holiday == 1 ~ outcome,
+                                               TRUE ~ outcome_clean)) %>%
+                    select(-outcome_clean) %>%
+                    mutate(outcome = log(outcome))
+
+            } else if (transformation == "log1p") {
+                train_data <- training(splits) %>%
+                    group_by(id) %>%
+                    mutate(cumsum_zero = cumsum(outcome)) %>%
+                    filter(cumsum_zero > 0) %>%
+                    mutate(outcome = expm1(outcome)) %>%
+                    mutate(outcome_clean = ts_clean_vec(outcome)) %>%
+                    left_join(holiday_clean_date) %>%
+                    mutate(holiday = ifelse(is.na(holiday), 0, 1)) %>%
+                    mutate(outcome = case_when(holiday == 1 ~ outcome,
+                                               TRUE ~ outcome_clean)) %>%
+                    select(-outcome_clean) %>%
+                    mutate(outcome = log1p(outcome))
+
+            } else {
+                train_data <- training(splits) %>%
+                    group_by(id) %>%
+                    mutate(cumsum_zero = cumsum(outcome)) %>%
+                    filter(cumsum_zero > 0) %>%
+                    mutate(outcome_clean = ts_clean_vec(outcome)) %>%
+                    left_join(holiday_clean_date) %>%
+                    mutate(holiday = ifelse(is.na(holiday), 0, 1)) %>%
+                    mutate(outcome = case_when(holiday == 1 ~ outcome,
+                                               TRUE ~ outcome_clean)) %>%
+                    select(-outcome_clean)
+            }
+
+
+
+        } else {
+
+            if (transformation == "log") {
+                train_data <- training(splits) %>%
+                    group_by(id) %>%
+                    mutate(cumsum_zero = cumsum(outcome)) %>%
+                    filter(cumsum_zero > 0) %>%
+                    mutate(outcome = exp(outcome)) %>%
+                    mutate(outcome_clean = ts_clean_vec(outcome))
+
+            } else if (transformation == "log1p") {
+                train_data <- training(splits) %>%
+                    group_by(id) %>%
+                    mutate(cumsum_zero = cumsum(outcome)) %>%
+                    filter(cumsum_zero > 0) %>%
+                    mutate(outcome = expm1(outcome)) %>%
+                    mutate(outcome_clean = ts_clean_vec(outcome))
+            } else {
+                train_data <- training(splits) %>%
+                    group_by(id) %>%
+                    mutate(cumsum_zero = cumsum(outcome)) %>%
+                    filter(cumsum_zero > 0) %>%
+                    mutate(outcome_clean = ts_clean_vec(outcome))
+            }
+        }
+
+
+    } else {
+        train_data <- training(splits)
+    }
+
+    return_list$full_data     <- full_data_tbl
+    return_list$data_prepared <- data_prepared_tbl
+    return_list$future_data   <- future_data
+    return_list$splits        <- splits
+    return_list$train_data    <- train_data
+    return_list$horizon       <- horizon
+
+    return(return_list)
+
+}
