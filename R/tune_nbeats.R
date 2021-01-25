@@ -25,13 +25,13 @@ tune_nbeats <- function(id, freq, recipe, splits, horizon, length, cv_slice_limi
 
 
     nbeats_grid <- data.frame(
-        epochs          = dplyr::case_when(is.null(epochs)        ~ sample(100, size = length, replace = TRUE), epochs),
-        lookback_length = dplyr::case_when(is.null(lookback)      ~ sample(1:7, size = length, replace = TRUE), lookback),
-        batch_size      = dplyr::case_when(is.null(batch_size)    ~ round(runif(length, min = 32, max = 1024), 0), batch_size),
-        learn_rate      = dplyr::case_when(is.null(learn_rate)    ~ runif(length, min = 1e-5, max = 1e-2), learn_rate),
-        loss_function   = dplyr::case_when(is.null(loss_function) ~ "MASE", loss_function),
-        scale           = dplyr::case_when(is.null(scale)         ~ sample(c(TRUE, FALSE), length, replace = TRUE), scale),
-        bagging_size    = dplyr::case_when(is.null(bagging_size)  ~ sample(1:10, size = length, replace = TRUE), bagging_size)
+        epochs          = ifelse(is.null(epochs), sample(100, size = length, replace = TRUE), epochs),
+        lookback_length = ifelse(is.null(lookback), sample(1:7, size = length, replace = TRUE), lookback),
+        batch_size      = ifelse(is.null(batch_size), round(runif(length, min = 32, max = 1024), 0), batch_size),
+        learn_rate      = ifelse(is.null(learn_rate), runif(length, min = 1e-5, max = 1e-2), learn_rate),
+        loss_function   = ifelse(is.null(loss_function), "MASE", loss_function),
+        scale           = ifelse(is.null(scale), sample(c(TRUE, FALSE), length, replace = TRUE), scale),
+        bagging_size    = ifelse(is.null(bagging_size), sample(1:10, size = length, replace = TRUE), bagging_size)
     )
 
 
@@ -56,7 +56,7 @@ tune_nbeats <- function(id, freq, recipe, splits, horizon, length, cv_slice_limi
 
         message(str_glue("Parameter set number {i} of {nrow(nbeats_grid)}"))
         message(str_glue("Epochs: {nbeats_grid$epochs[[i]]}"))
-        message(str_glue("Lookback: {nbeats_grid$lookback_length[i]}"))
+        message(str_glue("Lookback: {nbeats_grid$lookback_length[i * horizon]}"))
         message(str_glue("Batch size: {nbeats_grid$batch_size[i]}"))
         message(str_glue("Learning rate: {nbeats_grid$learn_rate[i]}"))
         message(str_glue("Scale: {nbeats_grid$scale[i]}"))

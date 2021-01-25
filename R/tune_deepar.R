@@ -24,14 +24,15 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
 
 
     gluonts_grid <- data.frame(
-        epochs          = dplyr::case_when(is.null(epochs)     ~ sample(100, size = length, replace = TRUE), epochs),
-        lookback_length = dplyr::case_when(is.null(lookback)   ~ sample(1:7 * horizon, size = length, replace = TRUE), lookback),
-        batch_size      = dplyr::case_when(is.null(batch_size) ~ runif(length, min = 32, max = 512), batch_size),
-        learn_rate      = dplyr::case_when(is.null(learn_rate) ~ runif(length, min = 1e-4, max = 1e-1), learn_rate),
-        num_cells       = dplyr::case_when(is.null(num_cells)  ~ sample(30:200, size = length, replace = TRUE), num_cells),
-        num_layers      = dplyr::case_when(is.null(num_layers) ~ sample(1:8, size = length, replace = TRUE), num_layers),
-        scale           = dplyr::case_when(is.null(scale)      ~ sample(c(TRUE, FALSE), size = length, replace = TRUE), scale)
+        epochs          = ifelse(is.null(epochs), sample(100, size = length, replace = TRUE),  epochs),
+        lookback_length = ifelse(is.null(lookback), sample(1:7 * horizon, size = length, replace = TRUE), lookback),
+        batch_size      = ifelse(is.null(batch_size), round(runif(length, min = 32, max = 512), 0), batch_size),
+        learn_rate      = ifelse(is.null(learn_rate), runif(length, min = 1e-4, max = 1e-1), learn_rate),
+        num_cells       = ifelse(is.null(num_cells), sample(30:200, size = length, replace = TRUE), num_cells),
+        num_layers      = ifelse(is.null(num_layers), sample(1:8, size = length, replace = TRUE), num_layers),
+        scale           = ifelse(is.null(scale), sample(c(TRUE, FALSE), size = length, replace = TRUE), scale)
     )
+
 
     gluonts_grid <- distinct(gluonts_grid)
 
