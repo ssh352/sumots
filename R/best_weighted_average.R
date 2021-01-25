@@ -35,7 +35,7 @@ best_weighted_average <- function(submodels, n_weight) {
     weights_row_use <- error_list %>%
         bind_rows() %>%
         arrange(mase) %>%
-        slice(1) %>%
+        dplyr::slice(1) %>%
         pull(weight_row)
 
     weights_use <- as.numeric(df_grid[weights_row_use, ])
