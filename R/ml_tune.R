@@ -25,6 +25,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
     require(rules)
     require(future)
     require(doFuture)
+    require(tictoc)
 
     # Cross validation
     #set.seed(123)
@@ -37,6 +38,10 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
 
     # XGBoost
     if ("xgboost" %in% models) {
+
+        message("Start tuning XGBoost")
+        tic()
+
         model_spec_xgboost_tune <- boost_tree(
             mode           = "regression",
             mtry           = tune(),
@@ -49,16 +54,22 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
             set_engine("xgboost")
 
         wflw_fit_xgboost <- wflw_creator(model_spec_xgboost_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, recursive)
+
         model_list$xgboost <- wflw_fit_xgboost
 
         model_table <- model_table %>%
-            add_modeltime_model(wflw_fit_xgboost)
+            combine_modeltime_tables(wflw_fit_xgboost %>% modeltime_tabl)
 
+        message("Finish tuning XGBoost")
+        toc()
     }
 
 
     # Random forest
     if ("rf" %in% models) {
+
+        message("Start tuning Random Forest")
+        tic()
 
         model_spec_rf_tune <- rand_forest(
             mode  = "regression",
@@ -72,13 +83,20 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
         model_list$rf <- wflw_fit_rf
 
         model_table <- model_table %>%
-            add_modeltime_model(wflw_fit_rf)
+            combine_modeltime_tables(wflw_fit_rf %>% modeltime_table())
+
+        message("Finish tuning Random Forest")
+        toc()
 
     }
 
 
     # Cubist
     if ("cubist" %in% models) {
+
+        message("Start tuning Cubist")
+        tic()
+
         model_spec_cubist_tune <- cubist_rules(
             mode       = "regression",
             committees = tune(),
@@ -91,13 +109,20 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
         model_list$cubist <- wflw_fit_cubist
 
         model_table <- model_table %>%
-            add_modeltime_model(wflw_fit_cubist)
+            combine_modeltime_tables(wflw_fit_cubist %>% modeltime_table())
+
+        message("Finish tuning Cubist")
+        toc()
 
     }
 
 
     # SVM - Radial basis
     if ("svm_rbf" %in% models) {
+
+        message("Start tuning SVM (radial basis)")
+        tic()
+
         model_spec_svm_rbf_tune <- svm_rbf(
             mode      = "regression",
             cost      = tune(),
@@ -110,13 +135,20 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
         model_list$svm_rbf <- wflw_fit_svm_rbf
 
         model_table <- model_table %>%
-            add_modeltime_model(wflw_fit_svm_rbf)
+            combine_modeltime_tables(wflw_fit_svm_rbf %>% modeltime_table())
+
+        message("Finish tuning SVM (radial basis")
+        toc()
 
     }
 
 
     # SVM - Polynomial
     if ("svm_poly" %in% models) {
+
+        message("Start tuning SVM (polynomial)")
+        tic()
+
         model_spec_svm_poly_tune <- svm_poly(
             mode         = "regression",
             cost         = tune(),
@@ -130,13 +162,20 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
         model_list$svm_poly <- wflw_fit_svm_poly
 
         model_table <- model_table %>%
-            add_modeltime_model(wflw_fit_svm_poly)
+            combine_modeltime_tables(wflw_fit_svm_poly %>% modeltime_table())
+
+        message("Finish tuning SVM (polynomial")
+        toc()
 
     }
 
 
     # Elastic Net
     if ("glmnet" %in% models) {
+
+        message("Start tuning Elastic Net")
+        tic()
+
         model_spec_glmnet <- linear_reg(
             mode    = "regression",
             penalty = tune(),
@@ -148,13 +187,20 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
         model_list$glmnet <- wflw_fit_glmnet
 
         model_table <- model_table %>%
-            add_modeltime_model(wflw_fit_glmnet)
+            combine_modeltime_tables(wflw_fit_glmnet %>% modeltime_table())
+
+        message("Finish tuning Elastic net")
+        toc()
 
     }
 
 
     # KNN
     if ("knn" %in% models) {
+
+        message("Start tuning KNN")
+        tic()
+
         model_spec_knn <- nearest_neighbor(
             mode        = "regression",
             neighbors   = tune(),
@@ -167,13 +213,20 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
         model_list$knn <- wflw_fit_knn
 
         model_table <- model_table %>%
-            add_modeltime_model(wflw_fit_knn)
+            combine_modeltime_tables(wflw_fit_knn %>% modeltime_table())
+
+        message("Finish tuning KNN")
+        toc()
 
     }
 
 
     # MARS
     if ("mars" %in% models) {
+
+        message("Start tuning MARS")
+        tic()
+
         model_spec_mars <- mars(
             mode        = "regression",
             num_terms   = tune(),
@@ -185,13 +238,20 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
         model_list$mars <- wflw_fit_mars
 
         model_table <- model_table %>%
-            add_modeltime_model(wflw_fit_mars)
+            combine_modeltime_tables(wflw_fit_mars %>% modeltime_table())
+
+        message("Finish tuning MARS")
+        toc()
 
     }
 
 
     # Prophet_boost
     if ("prophet_boost" %in% models) {
+
+        message("Start tuning Prophet Boost")
+        tic()
+
         model_spec_prophet <- prophet_boost(
             mode = "regression",
             changepoint_num    = tune(),
@@ -212,7 +272,10 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
         model_list$prophet_boost <- wflw_fit_prophet_boost
 
         model_table <- model_table %>%
-            add_modeltime_model(wflw_fit_prophet_boost)
+            combine_modeltime_tables(wflw_fit_prophet_boost %>% modeltime_table())
+
+        message("Finish tuning Prophet Boost")
+        toc()
     }
 
 
