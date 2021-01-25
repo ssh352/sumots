@@ -1,6 +1,6 @@
 #' Prepares data for modeling
 #'
-#' @param data Data frame with data on the right date format e.g. daily, weekly, monthly and with the categorical variables that should be included
+#' @param data Data frame with data on the right date format e.g. daily, weekly, monthly and with column named 'id'
 #' @param outcome_var Name of the outcome variable. The function will change the outcome variable name to 'outcome'
 #' @param negative_to_zero Recodes negative values as zero, defaults to TRUE
 #' @param max_gap_size The maximum length that the outcome can be zero. If the interval is larger than max_gap_size then only use data after the interval
@@ -21,9 +21,9 @@
 #' @return List with data_prepared, future_data, train_data, splits and horizon
 
 
-data_prep_func <- function(data, outcome_var, negative_to_zero = TRUE, max_gap_size = 52, trailing_zero = FALSE, transformation = "none",
-                           use_holidays = TRUE, holidays_to_use, use_covid = TRUE, covid_data, horizon = 12, clean = FALSE,
-                           use_holiday_to_clean = TRUE, holiday_for_clean, pacf_threshold = 0.2, no_fourier_terms = 5, fourier_k = 5,
+data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size = 52, trailing_zero = FALSE, transformation = "none",
+                           use_holidays = FALSE, holidays_to_use, use_covid = FALSE, covid_data, horizon = 12, clean = FALSE,
+                           use_holiday_to_clean = FALSE, holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5, fourier_k = 5,
                            slidify_period = c(4, 8)) {
 
     # return list
@@ -46,27 +46,33 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = TRUE, max_gap_s
 
 
     # Gap size
-    df <- df %>%
-        complete(id, date) %>%
-        mutate(outcome = ifelse(is.na(outcome), 0, outcome)) %>%
-        fill(-outcome, .direction = "down") %>%
-        group_by(id) %>%
+    if (fix_gap_size) {
+        df <- df %>%
+            complete(id, date) %>%
+            mutate(outcome = ifelse(is.na(outcome), 0, outcome)) %>%
+            fill(-outcome, .direction = "down") %>%
+            group_by(id) %>%
 
-        # leading zeros first
-        mutate(cumsum_sala = cumsum(outcome)) %>%
-        filter(cumsum_sala > 0) %>%
+            # leading zeros first
+            mutate(cumsum_sala = cumsum(outcome)) %>%
+            filter(cumsum_sala > 0) %>%
 
-        # choose only items with sales in the past 52 weeks
-        mutate(no_sala = ifelse(outcome == 0, 1, 0)) %>%
-        mutate(cum_no_sala = rollapplyr(no_sala, width = max_gap_size, FUN = sum, partial = TRUE),
-               indicator = case_when(
-                   lag(cum_no_sala) == max_gap_size & outcome > 0 ~ 1,
-                   all(cum_no_sala < max_gap_size) ~ 1,
-                   TRUE ~ 0),
-               cum_indicator = cumsum(indicator)) %>%
-        filter(cum_indicator >= 1) %>%
-        select(-c(cumsum_sala, no_sala, cum_no_sala, indicator, cum_indicator)) %>%
-        ungroup()
+            # choose only items with sales in the past 52 weeks
+            mutate(no_sala = ifelse(outcome == 0, 1, 0)) %>%
+            mutate(cum_no_sala = rollapplyr(no_sala, width = max_gap_size, FUN = sum, partial = TRUE),
+                   indicator = case_when(
+                       lag(cum_no_sala) == max_gap_size & outcome > 0 ~ 1,
+                       all(cum_no_sala < max_gap_size) ~ 1,
+                       TRUE ~ 0),
+                   cum_indicator = cumsum(indicator)) %>%
+            filter(cum_indicator >= 1) %>%
+            select(-c(cumsum_sala, no_sala, cum_no_sala, indicator, cum_indicator)) %>%
+            ungroup()
+
+    } else {
+        df
+    }
+
 
 
     # Trailing zeros
@@ -134,17 +140,30 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = TRUE, max_gap_s
 
 
     # Fourier period
-    fourier_periods <- df %>%
-        filter(abc %in% c("a", "b")) %>%
-        group_by(id) %>%
-        tk_acf_diagnostics(date, outcome) %>%
-        ungroup() %>%
-        filter(abs(PACF) > pacf_threshold) %>%
-        count(lag) %>%
-        arrange(desc(n)) %>%
-        filter(lag > 1) %>%
-        dplyr::slice(1:no_fourier_terms) %>%
-        pull(lag)
+    if (use_abc_category) {
+        fourier_periods <- df %>%
+            filter(abc %in% c("a", "b")) %>%
+            group_by(id) %>%
+            tk_acf_diagnostics(date, outcome) %>%
+            ungroup() %>%
+            filter(abs(PACF) > pacf_threshold) %>%
+            count(lag) %>%
+            arrange(desc(n)) %>%
+            filter(lag > 1) %>%
+            dplyr::slice(1:no_fourier_terms) %>%
+            pull(lag)
+    } else {
+        fourier_periods <- df %>%
+            group_by(id) %>%
+            tk_acf_diagnostics(date, outcome) %>%
+            ungroup() %>%
+            filter(abs(PACF) > pacf_threshold) %>%
+            count(lag) %>%
+            arrange(desc(n)) %>%
+            filter(lag > 1) %>%
+            dplyr::slice(1:no_fourier_terms) %>%
+            pull(lag)
+    }
 
     fourier_periods <- c(fourier_periods, 52/2,  52)
     fourier_periods <- unique(fourier_periods)

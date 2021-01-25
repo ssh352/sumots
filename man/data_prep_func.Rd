@@ -7,18 +7,20 @@
 data_prep_func(
   data,
   outcome_var,
-  negative_to_zero = TRUE,
+  negative_to_zero = FALSE,
+  fix_gap_size = FALSE,
   max_gap_size = 52,
   trailing_zero = FALSE,
   transformation = "none",
-  use_holidays = TRUE,
+  use_holidays = FALSE,
   holidays_to_use,
-  use_covid = TRUE,
+  use_covid = FALSE,
   covid_data,
   horizon = 12,
   clean = FALSE,
-  use_holiday_to_clean = TRUE,
+  use_holiday_to_clean = FALSE,
   holiday_for_clean,
+  use_abc_category = FALSE,
   pacf_threshold = 0.2,
   no_fourier_terms = 5,
   fourier_k = 5,
@@ -26,7 +28,7 @@ data_prep_func(
 )
 }
 \arguments{
-\item{data}{Data frame with data on the right date format e.g. daily, weekly, monthly and with the categorical variables that should be included}
+\item{data}{Data frame with data on the right date format e.g. daily, weekly, monthly and with column named 'id'}
 
 \item{outcome_var}{Name of the outcome variable. The function will change the outcome variable name to 'outcome'}
 
