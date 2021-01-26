@@ -58,7 +58,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, recursiv
         model_list$xgboost <- wflw_fit_xgboost
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_xgboost %>% modeltime_tabl)
+            combine_modeltime_tables(wflw_fit_xgboost %>% modeltime_table())
 
         message("Finish tuning XGBoost")
         toc()
