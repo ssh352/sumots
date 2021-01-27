@@ -56,7 +56,7 @@ tune_nbeats <- function(id, freq, recipe, splits, horizon, length, cv_slice_limi
 
         message(str_glue("Parameter set number {i} of {nrow(nbeats_grid)}"))
         message(str_glue("Epochs: {nbeats_grid$epochs[[i]]}"))
-        message(str_glue("Lookback: {nbeats_grid$lookback_length[i * horizon]}"))
+        message(str_glue("Number of different lookback periods: {nbeats_grid$lookback_length[i]}"))
         message(str_glue("Batch size: {nbeats_grid$batch_size[i]}"))
         message(str_glue("Learning rate: {nbeats_grid$learn_rate[i]}"))
         message(str_glue("Scale: {nbeats_grid$scale[i]}"))
