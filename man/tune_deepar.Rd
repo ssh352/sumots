@@ -12,6 +12,7 @@ tune_deepar(
   splits,
   length,
   cv_slice_limit,
+  most_important = TRUE,
   assess = "12 weeks",
   skip = "4 weeks",
   initial = "12 months",

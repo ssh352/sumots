@@ -18,24 +18,34 @@
 #' @param scale Scales numeric data by id group using mean = 0, standard deviation = 1 transformation. No info on importance
 
 
-tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limit, assess = "12 weeks",
+tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limit, most_important = TRUE, assess = "12 weeks",
                         skip = "4 weeks", initial = "12 months", epochs = NULL, lookback = NULL, batch_size = NULL,
                         learn_rate = NULL, num_cells = NULL, num_layers = NULL, scale = NULL) {
 
 
-    gluonts_grid <- data.frame(
-        epochs          = ifelse(is.null(epochs), sample(100, size = length, replace = TRUE),  epochs),
-        lookback_length = ifelse(is.null(lookback), sample(1:7 * horizon, size = length, replace = TRUE), lookback),
-        batch_size      = ifelse(is.null(batch_size), round(runif(length, min = 32, max = 512), 0), batch_size),
-        learn_rate      = ifelse(is.null(learn_rate), runif(length, min = 1e-4, max = 1e-1), learn_rate),
-        num_cells       = ifelse(is.null(num_cells), sample(30:200, size = length, replace = TRUE), num_cells),
-        num_layers      = ifelse(is.null(num_layers), sample(1:8, size = length, replace = TRUE), num_layers),
-        scale           = ifelse(is.null(scale), sample(c(TRUE, FALSE), size = length, replace = TRUE), scale)
-    )
-
+    if (most_important) {
+        gluonts_grid <- data.frame(
+            epochs          = if (is.null(epochs)) sample(100, size = length, replace = TRUE) else epochs,
+            lookback_length = if (is.null(lookback)) sample(1:7 * horizon, size = length, replace = TRUE) else lookback,
+            batch_size      = if (is.null(batch_size)) round(runif(length, min = 32, max = 512), 0) else batch_size,
+            learn_rate      = if (is.null(learn_rate)) runif(length, min = 1e-4, max = 1e-1) else learn_rate,
+            num_cells       = 40,
+            num_layers      = 2,
+            scale           = FALSE
+        )
+    } else {
+        gluonts_grid <- data.frame(
+            epochs          = if (is.null(epochs)) sample(100, size = length, replace = TRUE) else  epochs,
+            lookback_length = if (is.null(lookback)) sample(1:7 * horizon, size = length, replace = TRUE) else lookback,
+            batch_size      = if (is.null(batch_size)) round(runif(length, min = 32, max = 512), 0) else batch_size,
+            learn_rate      = if (is.null(learn_rate)) runif(length, min = 1e-4, max = 1e-1) else learn_rate,
+            num_cells       = if (is.null(num_cells)) sample(30:200, size = length, replace = TRUE) else num_cells,
+            num_layers      = if (is.null(num_layers)) sample(1:8, size = length, replace = TRUE) else num_layers,
+            scale           = if (is.null(scale)) sample(c(TRUE, FALSE), size = length, replace = TRUE) else scale
+        )
+    }
 
     gluonts_grid <- distinct(gluonts_grid)
-
 
     resamples_tscv <- time_series_cv(
         data = training(splits),
@@ -45,7 +55,6 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
         skip        = skip,
         slice_limit = cv_slice_limit
     )
-
 
     model_table <- modeltime_table()
 

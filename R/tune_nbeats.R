@@ -25,13 +25,13 @@ tune_nbeats <- function(id, freq, recipe, splits, horizon, length, cv_slice_limi
 
 
     nbeats_grid <- data.frame(
-        epochs          = ifelse(is.null(epochs), sample(100, size = length, replace = TRUE), epochs),
-        lookback_length = ifelse(is.null(lookback), sample(1:7, size = length, replace = TRUE), lookback),
-        batch_size      = ifelse(is.null(batch_size), round(runif(length, min = 32, max = 1024), 0), batch_size),
-        learn_rate      = ifelse(is.null(learn_rate), runif(length, min = 1e-5, max = 1e-2), learn_rate),
-        loss_function   = ifelse(is.null(loss_function), "MASE", loss_function),
-        scale           = ifelse(is.null(scale), sample(c(TRUE, FALSE), length, replace = TRUE), scale),
-        bagging_size    = ifelse(is.null(bagging_size), sample(1:10, size = length, replace = TRUE), bagging_size)
+        epochs          = if (is.null(epochs)) sample(100, size = length, replace = TRUE) else epochs,
+        lookback_length = if (is.null(lookback)) sample(1:7, size = length, replace = TRUE) else lookback,
+        batch_size      = if (is.null(batch_size)) round(runif(length, min = 32, max = 1024), 0) else batch_size,
+        learn_rate      = if (is.null(learn_rate)) runif(length, min = 1e-5, max = 1e-2) else learn_rate,
+        loss_function   = if (is.null(loss_function)) "MASE" else loss_function,
+        scale           = if (is.null(scale)) sample(c(TRUE, FALSE), length, replace = TRUE) else scale,
+        bagging_size    = if (is.null(bagging_size)) sample(1:10, size = length, replace = TRUE) else bagging_size
     )
 
 

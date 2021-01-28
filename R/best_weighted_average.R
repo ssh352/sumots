@@ -23,6 +23,9 @@ best_weighted_average <- function(submodels, n_weight) {
 
     error_list <- list()
     for (i in 1:nrow(df_grid)) {
+
+        message(str_glue("Combination {i} of {nrow(df_grid)}"))
+
         model_ensemble <- submodels %>%
             ensemble_weighted(loadings = as.numeric(df_grid[i, ])) %>%
             modeltime_table()
