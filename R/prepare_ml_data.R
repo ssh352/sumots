@@ -170,21 +170,39 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
 
 
     # Full data
+    if (use_abc_category) {
+        full_data_tbl <- df %>%
+            arrange(id, abc, date) %>%
+            group_by(id) %>%
+            tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+            tk_augment_lags(.value = outcome, .lags = horizon) %>%
+            tk_augment_slidify(
+                contains("_lag"),
+                .f = ~mean(.x, na.rm = TRUE),
+                .period  = slidify_period,
+                .partial = TRUE,
+                .align   = "center"
+            ) %>%
+            ungroup() %>%
+            rowid_to_column(var = "rowid")
 
-    full_data_tbl <- df %>%
-        arrange(id, abc, date) %>%
-        group_by(id) %>%
-        tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
-        tk_augment_lags(.value = outcome, .lags = horizon) %>%
-        tk_augment_slidify(
-            contains("_lag"),
-            .f = ~mean(.x, na.rm = TRUE),
-            .period  = slidify_period,
-            .partial = TRUE,
-            .align   = "center"
-        ) %>%
-        ungroup() %>%
-        rowid_to_column(var = "rowid")
+    } else {
+        full_data_tbl <- df %>%
+            arrange(id, date) %>%
+            group_by(id) %>%
+            tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+            tk_augment_lags(.value = outcome, .lags = horizon) %>%
+            tk_augment_slidify(
+                contains("_lag"),
+                .f = ~mean(.x, na.rm = TRUE),
+                .period  = slidify_period,
+                .partial = TRUE,
+                .align   = "center"
+            ) %>%
+            ungroup() %>%
+            rowid_to_column(var = "rowid")
+    }
+
 
     # if (recursive) {
     #     # Vinn aðeins með stærstu vörurnar (pareto-pareto)
