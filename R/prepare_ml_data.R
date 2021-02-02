@@ -172,6 +172,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     # Full data
 
     full_data_tbl <- df %>%
+        arrange(id, abc, date) %>%
         group_by(id) %>%
         tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
         tk_augment_lags(.value = outcome, .lags = horizon) %>%

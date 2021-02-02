@@ -4,7 +4,7 @@
 \alias{best_weighted_average}
 \title{Find best weights for each model in an ensemble}
 \usage{
-best_weighted_average(submodels, n_weight)
+best_weighted_average(submodels, n_weight, parallel = TRUE, splits)
 }
 \arguments{
 \item{submodels}{Modeltable with models to average}
