@@ -26,9 +26,12 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                            use_holiday_to_clean = FALSE, holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5, fourier_k = 5,
                            slidify_period = c(4, 8)) {
 
+    require(tidyverse)
+    require(timetk)
+    require(tidymodels)
+
     # return list
     return_list <- list()
-
 
     # Rename outcome
     df <- data %>%
@@ -111,6 +114,18 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
             mutate(outcome = log1p(outcome))
     }
 
+    # Remove ID with one obs
+    one_obs_id_tbl <- df %>%
+        group_by(id) %>%
+        mutate(no_obs = n()) %>%
+        filter(no_obs == 1) %>%
+        pull(id)
+
+    df <- df %>%
+        group_by(id) %>%
+        mutate(no_obs = n()) %>%
+        filter(no_obs > 1) %>%
+        select(-no_obs)
 
     # Future and prepared data
     df <- df %>%
@@ -142,7 +157,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     # Fourier period
     if (use_abc_category) {
         fourier_periods <- df %>%
-            filter(abc %in% c("a", "b")) %>%
+            filter(str_detect(abc, c("a|b"))) %>%
             group_by(id) %>%
             tk_acf_diagnostics(date, outcome) %>%
             ungroup() %>%
@@ -202,48 +217,6 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
             ungroup() %>%
             rowid_to_column(var = "rowid")
     }
-
-
-    # if (recursive) {
-    #     # Vinn aðeins með stærstu vörurnar (pareto-pareto)
-    #     top_products <- data %>%
-    #         filter(date >= "2020-01-01") %>%
-    #         group_by(id) %>%
-    #         summarise(outcome = sum(outcome)) %>%
-    #         arrange(desc(outcome)) %>%
-    #         dplyr::slice(1:recursive_top) %>%
-    #         pull(id)
-    #
-    #     full_data_tbl <- df %>%
-    #         filter(id %in% top_products) %>%
-    #         group_by(id) %>%
-    #         tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
-    #         tk_augment_lags(.value = outcome, .lags = 1:horizon) %>%
-    #         tk_augment_slidify(
-    #             contains("_lag"),
-    #             .f = ~mean(.x, na.rm = TRUE),
-    #             .period  = slidify_period,
-    #             .partial = TRUE,
-    #             .align   = "center"
-    #         ) %>%
-    #         ungroup() %>%
-    #         rowid_to_column(var = "rowid")
-    #
-    # } else {
-    #     full_data_tbl <- df %>%
-    #         group_by(id) %>%
-    #         tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
-    #         tk_augment_lags(.value = outcome, .lags = horizon) %>%
-    #         tk_augment_slidify(
-    #             contains("_lag"),
-    #             .f = ~mean(.x, na.rm = TRUE),
-    #             .period  = slidify_period,
-    #             .partial = TRUE,
-    #             .align   = "center"
-    #         ) %>%
-    #         ungroup() %>%
-    #         rowid_to_column(var = "rowid")
-    # }
 
 
 
@@ -374,6 +347,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     return_list$splits        <- splits
     return_list$train_data    <- train_data
     return_list$horizon       <- horizon
+    returN_list$one_obs_id    <- one_obs_id_tbl
 
     return(return_list)
 
