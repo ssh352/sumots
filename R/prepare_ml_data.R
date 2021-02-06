@@ -347,7 +347,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     return_list$splits        <- splits
     return_list$train_data    <- train_data
     return_list$horizon       <- horizon
-    returN_list$one_obs_id    <- one_obs_id_tbl
+    return_list$one_obs_id    <- one_obs_id_tbl
 
     return(return_list)
 
