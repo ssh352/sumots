@@ -60,6 +60,8 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
 
     deepar_list <- list()
     cv_list     <- list()
+    wflw_list   <- list()
+    wflw_return <- list()
 
     for(i in 1:nrow(gluonts_grid)) {
 
@@ -101,14 +103,21 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
                 modeltime_accuracy(testing(resamples_tscv$splits[[j]])) %>%
                 add_column(fold = paste("fold_", j))
 
-            cv_list[[j]] <- cv_accuracy %>% bind_cols(gluonts_grid[i,])
+            cv_list[[j]]   <- cv_accuracy %>% bind_cols(gluonts_grid[i,])
+            wflw_list[[j]] <- wflw_fit_deepar_1
         }
 
         deepar_list[[i]] <- bind_rows(cv_list)
+        wflw_return[[i]] <- bind_rows(wflw_list)
 
     }
 
     deepar_list <- bind_rows(deepar_list)
+    wflw_return <- bind_rows(wflw_return)
 
-    return(deepar_list)
+    return_list <- list()
+    return_list$deepar_list <- deepar_list
+    return_list$wflw <- wflw_return
+
+    return(return_list)
 }

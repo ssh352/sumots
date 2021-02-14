@@ -222,8 +222,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
 
     # data prepared
     data_prepared_tbl <- full_data_tbl %>%
-        filter(!is.na(outcome)) %>%
-        drop_na()
+        filter(!is.na(outcome))
 
 
     # Future data
