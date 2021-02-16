@@ -18,6 +18,7 @@ data_prep_func(
   covid_data,
   horizon = 12,
   clean = FALSE,
+  drop_na = TRUE,
   use_holiday_to_clean = FALSE,
   holiday_for_clean,
   use_abc_category = FALSE,
@@ -51,6 +52,8 @@ data_prep_func(
 \item{horizon}{The forecast horizon}
 
 \item{clean}{Should the data be cleand for outliers. Defaults to FALSE}
+
+\item{drop_na}{When creating data_prepared_tbl, should NA's be dropped. Defaults to TRUE}
 
 \item{use_holiday_to_clean}{Uses fridagar_one_var from the create_holiday() function to revert series to original value if cleand}
 
