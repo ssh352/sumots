@@ -9,7 +9,7 @@ ml_tune(
   modeltime_recipe,
   vfold,
   grid_size,
-  recursive = FALSE,
+  parallel_over = "everything",
   return = c("modellist", "modeltable", "both"),
   models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars",
     "prophet_boost")
@@ -24,7 +24,7 @@ ml_tune(
 
 \item{grid_size}{The size of the hyperparameter grid used for tuning the parameters}
 
-\item{recursive}{Is the model recursive or not. Defaults to FALSE}
+\item{parallel_over}{A single string containing either "resamples" or "everything" describing how to use parallel processing. See ?control_grid}
 
 \item{return}{What do you want to return. List of workflows, modeltime table or both?}
 

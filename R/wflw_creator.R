@@ -6,11 +6,10 @@
 #' @param ml_recipe Recipe for the models
 #' @param resamples_kfold Resamples used for tuning parameters
 #' @param grid_size The size of the grid of parameters
-#' @param recursive Indicates if the model is recursive or not
 #' @export
 #'
 
-wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = grid_size, recursive = recursive) {
+wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = grid_size, parallel_over = parallel_over) {
 
     wflw <- workflow() %>%
         add_model(model_spec) %>%
@@ -21,7 +20,7 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
         resamples  = resamples_kfold,
         param_info = parameters(wflw),
         grid       = grid_size,
-        control    = control_grid(verbose = TRUE, allow_par = TRUE)
+        control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_over)
     )
 
     best_results <- tune_results %>%
@@ -33,22 +32,10 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
             tk_augment_lags(outcome, .lags = 1:horizon)
     }
 
-    if (recursive) {
-        wflw_fit <- wflw %>%
-            finalize_workflow(parameters = best_results %>% dplyr::slice(1)) %>%
-            fit(training(splits)) %>%
-            recursive(
-                transform  = lag_transformer,
-                train_tail = tail(training(splits), horizon)
-            )
+    wflw_fit <- wflw %>%
+        finalize_workflow(parameters = best_results %>% dplyr::slice(1)) %>%
+        fit(training(splits))
 
-
-    } else {
-        wflw_fit <- wflw %>%
-            finalize_workflow(parameters = best_results %>% dplyr::slice(1)) %>%
-            fit(training(splits))
-
-    }
 
     return(wflw_fit)
 

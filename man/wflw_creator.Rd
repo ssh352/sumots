@@ -9,7 +9,7 @@ wflw_creator(
   ml_recipe,
   resamples_kfold,
   grid_size = grid_size,
-  recursive = recursive
+  parallel_over = parallel_over
 )
 }
 \arguments{
@@ -20,8 +20,6 @@ wflw_creator(
 \item{resamples_kfold}{Resamples used for tuning parameters}
 
 \item{grid_size}{The size of the grid of parameters}
-
-\item{recursive}{Indicates if the model is recursive or not}
 }
 \description{
 wflw_creater() is a function that creates workflow

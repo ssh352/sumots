@@ -74,8 +74,6 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
         message(str_glue("Number of layers: {gluonts_grid$num_layers[i]}"))
         message(str_glue("Scale: {gluonts_grid$scale[i]}"))
 
-
-
         model_spec <- deep_ar(
             id                = id,
             freq              = freq,
@@ -101,23 +99,32 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
             cv_accuracy <- wflw_fit_deepar_1 %>%
                 modeltime_table() %>%
                 modeltime_accuracy(testing(resamples_tscv$splits[[j]])) %>%
-                add_column(fold = paste("fold_", j))
+                add_column(fold = paste0("fold_", j))
 
-            cv_list[[j]]   <- cv_accuracy %>% bind_cols(gluonts_grid[i,])
-            wflw_list[[j]] <- wflw_fit_deepar_1
+            cv_accuracy_summary <- cv_accuracy %>%
+                group_by(.model_id, .model_desc, fold) %>%
+                summarise(mae   = mean(mae, na.rm = TRUE),
+                          mape  = mean(mape, na.rm = TRUE),
+                          mase  = mean(mase, na.rm = TRUE),
+                          smape = mean(smape, na.rm = TRUE),
+                          rmse  = mean(rmse, na.rm = TRUE),
+                          rsq   = mean(rsq, na.rm = TRUE))
+
+            cv_list[[j]] <- cv_accuracy_summary %>% bind_cols(gluonts_grid[i,])
         }
 
         deepar_list[[i]] <- bind_rows(cv_list)
-        wflw_return[[i]] <- bind_rows(wflw_list)
+        wflw_return[[i]] <- wflw_fit_deepar_1
 
     }
 
-    deepar_list <- bind_rows(deepar_list)
-    wflw_return <- bind_rows(wflw_return)
+    deepar_list      <- bind_rows(deepar_list)
+    best_model_index <- which(deepar_list$rmse == min(deepar_list$rmse))
+    best_model       <- wflw_return[[best_model_index]]
 
     return_list <- list()
     return_list$deepar_list <- deepar_list
-    return_list$wflw <- wflw_return
+    return_list$best_model  <- best_model
 
     return(return_list)
 }
