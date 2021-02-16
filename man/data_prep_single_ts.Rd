@@ -9,6 +9,7 @@ data_prep_single_ts(
   dep_var,
   date_group = "day",
   clean_outliers = TRUE,
+  drop_na = TRUE,
   prepros = "log",
   spline_degree = 3,
   fourier_k = 5,
@@ -24,6 +25,8 @@ data_prep_single_ts(
 \item{dep_var}{Unquoted name of the dependent variable}
 
 \item{date_group}{Frequency of the data, defaults to day}
+
+\item{drop_na}{When creating data_prepared_tbl, should NA's be dropped. Defaults to TRUE}
 
 \item{prepros}{The preprocessing of the outcome variable. Defaults to log}
 

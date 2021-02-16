@@ -7,6 +7,7 @@
 #' @param prepros The preprocessing of the outcome variable. Defaults to log
 #' @param spline_degree The degree of the natural spline, defaults to 3
 #' @param fourier_k Number or orders to include for each sine/cosine
+#' @param drop_na When creating data_prepared_tbl, should NA's be dropped. Defaults to TRUE
 #' @param horzon The forecasting horizon, defaults to 30
 #' @param use_xreg Are you using external regressors, defaults to FALSE
 #' @param zero_out_fridagar Should holidays be set to zero for the forecast horizon due to e.g. covid, defaults to 1 year into the future
@@ -14,7 +15,7 @@
 #'
 #' @export
 #'
-data_prep_single_ts <- function(data, dep_var, date_group = "day", clean_outliers = TRUE,
+data_prep_single_ts <- function(data, dep_var, date_group = "day", clean_outliers = TRUE, drop_na = TRUE,
                                 prepros = "log", spline_degree = 3, fourier_k = 5, horizon = 30,
                                 use_xreg = FALSE, zero_out_fridagar = today() + years(1),
                                 fridagar = FALSE) {
@@ -218,8 +219,14 @@ data_prep_single_ts <- function(data, dep_var, date_group = "day", clean_outlier
 
 
     # Modeling and forecasting data ----
-    data_prepared_tbl <- data_prep_use %>%
-        filter(!(is.na(outcome)))
+    if (drop_na) {
+        data_prepared_tbl <- data_prep_use %>%
+            filter(!(is.na(outcome))) %>%
+            drop_na()
+    } else {
+        data_prepared_tbl <- data_prep_use %>%
+            filter(!(is.na(outcome)))
+    }
 
     forecast_tbl <- data_prep_use %>%
         filter(is.na(outcome))
