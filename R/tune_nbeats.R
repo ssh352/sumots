@@ -50,12 +50,15 @@ tune_nbeats <- function(id, freq, recipe, splits, horizon, length, cv_slice_limi
 
     nbeats_list <- list()
     cv_list     <- list()
+    wflw_list   <- list()
+    wflw_return <- list()
 
 
     for(i in 1:nrow(nbeats_grid)) {
 
         message(str_glue("Parameter set number {i} of {nrow(nbeats_grid)}"))
         message(str_glue("Epochs: {nbeats_grid$epochs[[i]]}"))
+        message(str_glue("Lookback length: {nbeats_grid$lookback_length[[i]]}"))
         message(str_glue("Number of different lookback periods: {nbeats_grid$lookback_length[i]}"))
         message(str_glue("Batch size: {nbeats_grid$batch_size[i]}"))
         message(str_glue("Learning rate: {nbeats_grid$learn_rate[i]}"))
@@ -79,7 +82,7 @@ tune_nbeats <- function(id, freq, recipe, splits, horizon, length, cv_slice_limi
 
         for (j in 1:cv_slice_limit) {
 
-            byrja <- Sys.time()
+            #byrja <- Sys.time()
 
             wflw_fit_nbeats <- workflow() %>%
                 add_model(model_spec) %>%
@@ -91,18 +94,36 @@ tune_nbeats <- function(id, freq, recipe, splits, horizon, length, cv_slice_limi
                 modeltime_accuracy(testing(resamples_tscv$splits[[j]])) %>%
                 add_column(fold = paste("fold_", j))
 
-            enda <- Sys.time() - byrja
-            cv_accuracy$tune_time <- enda
+            cv_accuracy_summary <- cv_accuracy %>%
+                group_by(.model_id, .model_desc, fold) %>%
+                summarise(mae   = mean(mae, na.rm = TRUE),
+                          mape  = mean(mape, na.rm = TRUE),
+                          mase  = mean(mase, na.rm = TRUE),
+                          smape = mean(smape, na.rm = TRUE),
+                          rmse  = mean(rmse, na.rm = TRUE),
+                          rsq   = mean(rsq, na.rm = TRUE))
 
-            cv_list[[j]] <- cv_accuracy %>% bind_cols(nbeats_grid[i,])
+            cv_list[[j]] <- cv_accuracy_summary %>% bind_cols(nbeats_grid[i,])
+
+            # enda <- Sys.time() - byrja
+            # cv_accuracy$tune_time <- enda
+
+            #cv_list[[j]] <- cv_accuracy %>% bind_cols(nbeats_grid[i,])
         }
 
         nbeats_list[[i]] <- bind_rows(cv_list)
-
+        wflw_return[[i]] <- wflw_fit_nbeats
     }
 
-    nbeats_list <- bind_rows(nbeats_list)
+    nbeats_list      <- bind_rows(nbeats_list)
+    best_model_index <- which(nbeats_list$rmse == min(nbeats_list$rmse))
+    best_model       <- wflw_return[[best_model_index]]
 
-    return(nbeats_list)
+    return_list <- list()
+    return_list$nbeats_list <- nbeats_list
+    return_list$best_model  <- best_model
+
+    return(return_list)
+
 
 }
