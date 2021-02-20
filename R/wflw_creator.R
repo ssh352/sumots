@@ -9,7 +9,7 @@
 #' @export
 #'
 
-wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = grid_size, parallel_over) {
+wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = grid_size, parallel_type) {
 
     wflw <- workflow() %>%
         add_model(model_spec) %>%
@@ -20,7 +20,7 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
         resamples  = resamples_kfold,
         param_info = parameters(wflw),
         grid       = grid_size,
-        control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_over)
+        control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_type)
     )
 
     best_results <- tune_results %>%

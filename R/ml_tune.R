@@ -11,7 +11,7 @@
 
 
 
-ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel_over = "everything", return = c("modellist", "modeltable", "both"),
+ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel_type = "everything", return = c("modellist", "modeltable", "both"),
                     models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars", "prophet_boost")
 ) {
 
@@ -50,7 +50,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
         ) %>%
             set_engine("xgboost")
 
-        wflw_fit_xgboost <- wflw_creator(model_spec_xgboost_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_over)
+        wflw_fit_xgboost <- wflw_creator(model_spec_xgboost_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
 
         model_list$xgboost <- wflw_fit_xgboost
 
@@ -76,7 +76,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
         ) %>%
             set_engine("ranger")
 
-        wflw_fit_rf <- wflw_creator(model_spec_rf_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_over)
+        wflw_fit_rf <- wflw_creator(model_spec_rf_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
         model_list$rf <- wflw_fit_rf
 
         model_table <- model_table %>%
@@ -102,7 +102,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
         ) %>%
             set_engine("Cubist")
 
-        wflw_fit_cubist <- wflw_creator(model_spec_cubist_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_over)
+        wflw_fit_cubist <- wflw_creator(model_spec_cubist_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
         model_list$cubist <- wflw_fit_cubist
 
         model_table <- model_table %>%
@@ -128,7 +128,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
         ) %>%
             set_engine("kernlab")
 
-        wflw_fit_svm_rbf <- wflw_creator(model_spec_svm_rbf_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_over)
+        wflw_fit_svm_rbf <- wflw_creator(model_spec_svm_rbf_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
         model_list$svm_rbf <- wflw_fit_svm_rbf
 
         model_table <- model_table %>%
@@ -155,7 +155,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
         ) %>%
             set_engine("kernlab")
 
-        wflw_fit_svm_poly <- wflw_creator(model_spec_svm_poly_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_over)
+        wflw_fit_svm_poly <- wflw_creator(model_spec_svm_poly_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
         model_list$svm_poly <- wflw_fit_svm_poly
 
         model_table <- model_table %>%
@@ -180,7 +180,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
         ) %>%
             set_engine("glmnet")
 
-        wflw_fit_glmnet <- wflw_creator(model_spec_glmnet, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_over)
+        wflw_fit_glmnet <- wflw_creator(model_spec_glmnet, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
         model_list$glmnet <- wflw_fit_glmnet
 
         model_table <- model_table %>%
@@ -206,7 +206,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
         ) %>%
             set_engine("kknn")
 
-        wflw_fit_knn <- wflw_creator(model_spec_knn, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_over)
+        wflw_fit_knn <- wflw_creator(model_spec_knn, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
         model_list$knn <- wflw_fit_knn
 
         model_table <- model_table %>%
@@ -231,7 +231,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
         ) %>%
             set_engine("earth")
 
-        wflw_fit_mars <- wflw_creator(model_spec_mars, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_over)
+        wflw_fit_mars <- wflw_creator(model_spec_mars, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
         model_list$mars <- wflw_fit_mars
 
         model_table <- model_table %>%
@@ -265,7 +265,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
         ) %>%
             set_engine("prophet_xgboost")
 
-        wflw_fit_prophet_boost <- wflw_creator(model_spec_prophet, modeltime_recipe, resamples_kfold = resamples_kfold, grid_size)
+
+        wflw_fit_prophet_boost <- wflw_creator(model_spec_prophet, modeltime_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
         model_list$prophet_boost <- wflw_fit_prophet_boost
 
         model_table <- model_table %>%
