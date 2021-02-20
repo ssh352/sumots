@@ -9,7 +9,7 @@
 #' @export
 #'
 
-wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = grid_size, parallel_over = parallel_over) {
+wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = grid_size, parallel_over) {
 
     wflw <- workflow() %>%
         add_model(model_spec) %>%
