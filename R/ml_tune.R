@@ -12,8 +12,8 @@
 
 
 ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel_type = "everything", return = c("modellist", "modeltable", "both"),
-                    models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars", "prophet_boost")
-) {
+                    models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars", "prophet_boost", "lightgbm", "catboost")
+                    ) {
 
     # Libraries
     require(tidyverse)
@@ -32,6 +32,64 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
     model_list <- list()
     model_table <- modeltime_table()
 
+    # Light GBM
+    if ("lightgbm" %in% models) {
+        message("Start tuning Light GBM")
+        tic()
+
+        model_spec_lightgbm_tune <- boost_tree(
+            mode           = "regression",
+            mtry           = tune(),
+            trees          = 1000,
+            min_n          = tune(),
+            tree_depth     = tune(),
+            learn_rate     = tune(),
+            loss_reduction = tune(),
+            sample_size    = tune(),
+            stop_iter      = tune()
+        ) %>%
+            set_engine("lightgbm")
+
+        wflw_fit_lightgbm <- wflw_creator(model_spec_lightgbm_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+
+        model_list$lightgbm <- wflw_fit_lightgbm
+
+        model_table <- model_table %>%
+            combine_modeltime_tables(wflw_fit_lightgbm %>% modeltime_table())
+
+        message("Finish tuning Lightgbm")
+        toc()
+    }
+
+
+    # Catboost
+    if ("catboost" %in% models) {
+        message("Start tuning Catboost")
+
+        model_spec_catboost_tune <- boost_tree(
+            mode           = "regression",
+            mtry           = tune(),
+            trees          = 1000,
+            min_n          = tune(),
+            tree_depth     = tune(),
+            learn_rate     = tune(),
+            loss_reduction = tune(),
+            sample_size    = tune(),
+            stop_iter      = tune()
+        ) %>%
+            set_engine("catboost")
+
+        wflw_fit_catboost <- wflw_creator(model_spec_catboost_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+
+        model_list$catboost <- wflw_fit_catboost
+
+        model_table <- model_table %>%
+            combine_modeltime_tables(wflw_fit_catboost %>% modeltime_table())
+
+        message("Finish tuning Catboost")
+        toc()
+    }
+
 
     # XGBoost
     if ("xgboost" %in% models) {
@@ -46,7 +104,9 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
             min_n          = tune(),
             tree_depth     = tune(),
             learn_rate     = tune(),
-            loss_reduction = tune()
+            loss_reduction = tune(),
+            sample_size    = tune(),
+            stop_iter      = tune()
         ) %>%
             set_engine("xgboost")
 

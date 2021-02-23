@@ -26,12 +26,6 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
     best_results <- tune_results %>%
         show_best(metric = "rmse", n = 1)
 
-    # Lag transformer
-    lag_transformer <- function(data) {
-        data %>%
-            tk_augment_lags(outcome, .lags = 1:horizon)
-    }
-
     wflw_fit <- wflw %>%
         finalize_workflow(parameters = best_results %>% dplyr::slice(1)) %>%
         fit(training(splits))
