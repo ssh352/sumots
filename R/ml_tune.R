@@ -59,6 +59,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning Lightgbm")
         toc()
+        gc()
     }
 
 
@@ -88,6 +89,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning Catboost")
         toc()
+        gc()
     }
 
 
@@ -119,6 +121,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning XGBoost")
         toc()
+        gc()
     }
 
 
@@ -144,7 +147,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning Random Forest")
         toc()
-
+        gc()
     }
 
 
@@ -170,7 +173,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning Cubist")
         toc()
-
+        gc()
     }
 
 
@@ -196,6 +199,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning SVM (radial basis")
         toc()
+        gc()
 
     }
 
@@ -223,7 +227,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning SVM (polynomial")
         toc()
-
+        gc()
     }
 
 
@@ -248,7 +252,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning Elastic net")
         toc()
-
+        gc()
     }
 
 
@@ -274,7 +278,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning KNN")
         toc()
-
+        gc()
     }
 
 
@@ -299,7 +303,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning MARS")
         toc()
-
+        gc()
     }
 
 
@@ -334,6 +338,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning Prophet Boost")
         toc()
+        gc()
     }
 
 
