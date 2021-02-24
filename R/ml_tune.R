@@ -45,8 +45,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
             tree_depth     = tune(),
             learn_rate     = tune(),
             loss_reduction = tune(),
-            sample_size    = tune(),
-            stop_iter      = tune()
+            sample_size    = tune()
+            #stop_iter      = tune()
         ) %>%
             set_engine("lightgbm")
 
@@ -75,8 +75,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
             tree_depth     = tune(),
             learn_rate     = tune(),
             loss_reduction = tune(),
-            sample_size    = tune(),
-            stop_iter      = tune()
+            sample_size    = tune()
+            #stop_iter      = tune()
         ) %>%
             set_engine("catboost")
 
@@ -107,8 +107,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
             tree_depth     = tune(),
             learn_rate     = tune(),
             loss_reduction = tune(),
-            sample_size    = tune(),
-            stop_iter      = tune()
+            sample_size    = tune()
+            #stop_iter      = tune()
         ) %>%
             set_engine("xgboost")
 
@@ -121,6 +121,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
 
         message("Finish tuning XGBoost")
         toc()
+
         gc()
     }
 
