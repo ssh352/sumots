@@ -9,7 +9,7 @@ wflw_creator(
   ml_recipe,
   resamples_kfold,
   grid_size = grid_size,
-  parallel_over = parallel_over
+  parallel_type
 )
 }
 \arguments{

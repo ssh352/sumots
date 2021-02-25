@@ -8,10 +8,12 @@
 #' @param return What do you want to return. List of workflows, modeltime table or both?
 #' @param models Choose which models to use. Choose any combination of xgboost, rf, cubist, svm_rbf, svm_poly, glmnet, knn, mars or prophet_boost
 #' @param parallel_over A single string containing either "resamples" or "everything" describing how to use parallel processing. See ?control_grid
+#' @param cv_repeats How many CV repeats to use
 
 
 
-ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel_type = "everything", return = c("modellist", "modeltable", "both"),
+ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repeats, parallel_type = "everything",
+                    return = c("modellist", "modeltable", "both"),
                     models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars", "prophet_boost", "lightgbm", "catboost")
                     ) {
 
@@ -27,7 +29,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, parallel
     # Cross validation
     #set.seed(123)
 
-    resamples_kfold <- training(splits) %>% vfold_cv(v = vfold)
+    resamples_kfold <- training(splits) %>% vfold_cv(v = vfold, repeats = cv_repeats)
 
     model_list <- list()
     model_table <- modeltime_table()

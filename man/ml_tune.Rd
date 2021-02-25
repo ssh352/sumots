@@ -9,10 +9,11 @@ ml_tune(
   modeltime_recipe,
   vfold,
   grid_size,
-  parallel_over = "everything",
+  cv_repeats,
+  parallel_type = "everything",
   return = c("modellist", "modeltable", "both"),
   models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars",
-    "prophet_boost")
+    "prophet_boost", "lightgbm", "catboost")
 )
 }
 \arguments{
@@ -24,11 +25,13 @@ ml_tune(
 
 \item{grid_size}{The size of the hyperparameter grid used for tuning the parameters}
 
-\item{parallel_over}{A single string containing either "resamples" or "everything" describing how to use parallel processing. See ?control_grid}
+\item{cv_repeats}{How many CV repeats to use}
 
 \item{return}{What do you want to return. List of workflows, modeltime table or both?}
 
 \item{models}{Choose which models to use. Choose any combination of xgboost, rf, cubist, svm_rbf, svm_poly, glmnet, knn, mars or prophet_boost}
+
+\item{parallel_over}{A single string containing either "resamples" or "everything" describing how to use parallel processing. See ?control_grid}
 }
 \description{
 ml_tune() will tune up to nine different ML algorithms used in forecasting
