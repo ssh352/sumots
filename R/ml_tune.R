@@ -33,6 +33,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
     model_list <- list()
     model_table <- modeltime_table()
+    finalized_wflw <- list()
 
     # Light GBM
     if ("lightgbm" %in% models) {
@@ -54,10 +55,13 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         wflw_fit_lightgbm <- wflw_creator(model_spec_lightgbm_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
 
-        model_list$lightgbm <- wflw_fit_lightgbm
+        model_list$lightgbm <- wflw_fit_lightgbm$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_lightgbm %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_lightgbm$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$lightgbm <- wflw_fit_lightgbm$finalized_workflow
+
 
         message("Finish tuning Lightgbm")
         toc()
@@ -84,10 +88,13 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         wflw_fit_catboost <- wflw_creator(model_spec_catboost_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
 
-        model_list$catboost <- wflw_fit_catboost
+        model_list$catboost <- wflw_fit_catboost$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_catboost %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_catboost$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$catboost <- wflw_fit_catboost$finalized_workflow
+
 
         message("Finish tuning Catboost")
         toc()
@@ -116,10 +123,13 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         wflw_fit_xgboost <- wflw_creator(model_spec_xgboost_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
 
-        model_list$xgboost <- wflw_fit_xgboost
+        model_list$xgboost <- wflw_fit_xgboost$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_xgboost %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_xgboost$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$xgboost <- wflw_fit_xgboost$finalized_workflow
+
 
         message("Finish tuning XGBoost")
         toc()
@@ -143,10 +153,13 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
             set_engine("ranger")
 
         wflw_fit_rf <- wflw_creator(model_spec_rf_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
-        model_list$rf <- wflw_fit_rf
+
+        model_list$ranger <- wflw_fit_rf$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_rf %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_rf$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$ranger <- wflw_fit_rf$finalized_workflow
 
         message("Finish tuning Random Forest")
         toc()
@@ -169,10 +182,13 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
             set_engine("Cubist")
 
         wflw_fit_cubist <- wflw_creator(model_spec_cubist_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
-        model_list$cubist <- wflw_fit_cubist
+
+        model_list$Cubist <- wflw_fit_cubist$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_cubist %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_cubist$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$Cubist <- wflw_fit_cubist$finalized_workflow
 
         message("Finish tuning Cubist")
         toc()
@@ -195,10 +211,14 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
             set_engine("kernlab")
 
         wflw_fit_svm_rbf <- wflw_creator(model_spec_svm_rbf_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
-        model_list$svm_rbf <- wflw_fit_svm_rbf
+
+        model_list$svm_rbf <- wflw_fit_svm_rbf$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_svm_rbf %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_svm_rbf$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$svm_rbf <- wflw_fit_svm_rbf$finalized_workflow
+
 
         message("Finish tuning SVM (radial basis")
         toc()
@@ -223,10 +243,14 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
             set_engine("kernlab")
 
         wflw_fit_svm_poly <- wflw_creator(model_spec_svm_poly_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
-        model_list$svm_poly <- wflw_fit_svm_poly
+
+        model_list$svm_poly <- wflw_fit_svm_poly$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_svm_poly %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_svm_poly$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$svm_poly <- wflw_fit_svm_poly$finalized_workflow
+
 
         message("Finish tuning SVM (polynomial")
         toc()
@@ -248,10 +272,14 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
             set_engine("glmnet")
 
         wflw_fit_glmnet <- wflw_creator(model_spec_glmnet, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
-        model_list$glmnet <- wflw_fit_glmnet
+
+        model_list$glmnet <- wflw_fit_glmnet$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_glmnet %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_glmnet$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$glmnet <- wflw_fit_glmnet$finalized_workflow
+
 
         message("Finish tuning Elastic net")
         toc()
@@ -274,10 +302,14 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
             set_engine("kknn")
 
         wflw_fit_knn <- wflw_creator(model_spec_knn, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
-        model_list$knn <- wflw_fit_knn
+
+        model_list$kknn <- wflw_fit_knn$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_knn %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_knn$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$kknn <- wflw_fit_knn$finalized_workflow
+
 
         message("Finish tuning KNN")
         toc()
@@ -299,10 +331,14 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
             set_engine("earth")
 
         wflw_fit_mars <- wflw_creator(model_spec_mars, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
-        model_list$mars <- wflw_fit_mars
+
+        model_list$mars <- wflw_fit_mars$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_mars %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_mars$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$mars <- wflw_fit_mars$finalized_workflow
+
 
         message("Finish tuning MARS")
         toc()
@@ -334,10 +370,14 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         wflw_fit_prophet_boost <- wflw_creator(model_spec_prophet, modeltime_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
-        model_list$prophet_boost <- wflw_fit_prophet_boost
+
+        model_list$prophet_xgboost <- wflw_fit_prophet_boost$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_prophet_boost %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_prophet_boost$fitted_workflow %>% modeltime_table())
+
+        finalized_wflw$prophet_xgboost <- wflw_fit_prophet_boost$finalized_workflow
+
 
         message("Finish tuning Prophet Boost")
         toc()
@@ -349,6 +389,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
     return_list <- list()
     return_list$models <- model_list
     return_list$modeltime_table <- model_table
+    return_list$finalized_workflows <- finalized_wflw
 
 
     if (return == "modellist") {

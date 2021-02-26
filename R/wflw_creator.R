@@ -11,6 +11,8 @@
 
 wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = grid_size, parallel_type) {
 
+    return_list <- list()
+
     wflw <- workflow() %>%
         add_model(model_spec) %>%
         add_recipe(ml_recipe)
@@ -26,11 +28,16 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
     best_results <- tune_results %>%
         show_best(metric = "rmse", n = 1)
 
-    wflw_fit <- wflw %>%
-        finalize_workflow(parameters = best_results %>% dplyr::slice(1)) %>%
+    fin_wflw <- wflw %>%
+        finalize_workflow(parameters = best_results %>% dplyr::slice(1))
+
+    wflw_fit <- fin_wflw %>%
         fit(training(splits))
 
+    return_list$fitted_workflow    <- wflw_fit
+    return_list$finalized_workflow <- fin_wflw
 
-    return(wflw_fit)
+
+    return(return_list)
 
 }
