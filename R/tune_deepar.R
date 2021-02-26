@@ -19,8 +19,9 @@
 
 
 tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limit, most_important = TRUE, assess = "12 weeks",
-                        skip = "4 weeks", initial = "12 months", epochs = NULL, lookback = NULL, batch_size = NULL,
-                        learn_rate = NULL, num_cells = NULL, num_layers = NULL, scale = NULL) {
+                        skip = "4 weeks", initial = "12 months",
+                        epochs = NULL, lookback = NULL, batch_size = NULL, learn_rate = NULL,
+                        num_cells = NULL, num_layers = NULL, scale = NULL, dropout = NULL) {
 
 
     if (most_important) {
@@ -31,17 +32,19 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
             learn_rate      = if (is.null(learn_rate)) runif(length, min = 1e-4, max = 1e-1) else learn_rate,
             num_cells       = 40,
             num_layers      = 2,
-            scale           = FALSE
+            scale           = FALSE,
+            dropout         = 0.1
         )
     } else {
         gluonts_grid <- data.frame(
-            epochs          = if (is.null(epochs)) sample(100, size = length, replace = TRUE) else  epochs,
+            epochs          = if (is.null(epochs)) sample(100, size = length, replace = FALSE) else  epochs,
             lookback_length = if (is.null(lookback)) sample(1:7 * horizon, size = length, replace = TRUE) else lookback,
             batch_size      = if (is.null(batch_size)) round(runif(length, min = 32, max = 512), 0) else batch_size,
             learn_rate      = if (is.null(learn_rate)) runif(length, min = 1e-4, max = 1e-1) else learn_rate,
-            num_cells       = if (is.null(num_cells)) sample(30:200, size = length, replace = TRUE) else num_cells,
+            num_cells       = if (is.null(num_cells)) sample(30:100, size = length, replace = TRUE) else num_cells,
             num_layers      = if (is.null(num_layers)) sample(1:8, size = length, replace = TRUE) else num_layers,
-            scale           = if (is.null(scale)) sample(c(TRUE, FALSE), size = length, replace = TRUE) else scale
+            scale           = if (is.null(scale)) sample(c(TRUE, FALSE), size = length, replace = TRUE) else scale,
+            dropout         = if (is.null(dropout)) runif(length, min = 0, max = 0.2) else dropout
         )
     }
 
@@ -64,7 +67,7 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
     wflw_return <- list()
 
     for(i in 1:nrow(gluonts_grid)) {
-
+        message("")
         message(str_glue("Parameter set number {i} of {nrow(gluonts_grid)}"))
         message(str_glue("Epochs: {gluonts_grid$epochs[i]}"))
         message(str_glue("Lookback: {gluonts_grid$lookback_length[i]}"))
@@ -73,6 +76,7 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
         message(str_glue("Number of cells: {gluonts_grid$num_cells[i]}"))
         message(str_glue("Number of layers: {gluonts_grid$num_layers[i]}"))
         message(str_glue("Scale: {gluonts_grid$scale[i]}"))
+        message(str_glue("Dropout: {gluonts_grid$dropout[i]}"))
 
         model_spec <- deep_ar(
             id                = id,
@@ -85,6 +89,7 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
             num_cells         = gluonts_grid$num_cells[i],
             num_layers        = gluonts_grid$num_layers[i],
             scale             = gluonts_grid$scale[i],
+            dropout           = gluonts_grid$dropout[i],
             cell_type         = "lstm",
         ) %>%
             set_engine("gluonts_deepar")
