@@ -16,10 +16,12 @@
 #' @param num_cells Number of RNN cells for each layer. Importance 5 of 7
 #' @param num_layers Number of RNN layers. No info on importance
 #' @param scale Scales numeric data by id group using mean = 0, standard deviation = 1 transformation. No info on importance
+#' @param multiple_gpu Should more than one GPU be used
+#' @param no_gpu How many, if more than one, should be used
 
 
 tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limit, most_important = TRUE, assess = "12 weeks",
-                        skip = "4 weeks", initial = "12 months",
+                        skip = "4 weeks", initial = "12 months", multiple_gpu = FALSE, no_gpu,
                         epochs = NULL, lookback = NULL, batch_size = NULL, learn_rate = NULL,
                         num_cells = NULL, num_layers = NULL, scale = NULL, dropout = NULL) {
 
@@ -78,21 +80,51 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
         message(str_glue("Scale: {gluonts_grid$scale[i]}"))
         message(str_glue("Dropout: {gluonts_grid$dropout[i]}"))
 
-        model_spec <- deep_ar(
-            id                = id,
-            freq              = freq,
-            prediction_length = horizon,
-            epochs            = gluonts_grid$epochs[i],
-            lookback_length   = gluonts_grid$lookback_length[i],
-            batch_size        = gluonts_grid$batch_size[i],
-            learn_rate        = gluonts_grid$learn_rate[i],
-            num_cells         = gluonts_grid$num_cells[i],
-            num_layers        = gluonts_grid$num_layers[i],
-            scale             = gluonts_grid$scale[i],
-            dropout           = gluonts_grid$dropout[i],
-            cell_type         = "lstm",
-        ) %>%
-            set_engine("gluonts_deepar")
+        if(multiple_gpu) {
+
+            ctx_list = if (no_gpu == 2) {
+                list(mxnet$gpu(0), mxnet$gpu(1))
+            } else if (no_gpu == 3) {
+                list(mxnet$gpu(0), mxnet$gpu(1), mxnet$gpu(2))
+            } else {
+                list(mxnet$gpu(0), mxnet$gpu(1), mxnet$gpu(2), mxnet$gpu(3))
+            }
+
+
+            model_spec <- deep_ar(
+                id                = id,
+                freq              = freq,
+                prediction_length = horizon,
+                epochs            = gluonts_grid$epochs[i],
+                lookback_length   = gluonts_grid$lookback_length[i],
+                batch_size        = gluonts_grid$batch_size[i],
+                learn_rate        = gluonts_grid$learn_rate[i],
+                num_cells         = gluonts_grid$num_cells[i],
+                num_layers        = gluonts_grid$num_layers[i],
+                scale             = gluonts_grid$scale[i],
+                dropout           = gluonts_grid$dropout[i],
+                cell_type         = "lstm",
+            ) %>%
+                set_engine("gluonts_deepar", ctx = ctx_list)
+
+        } else {
+            model_spec <- deep_ar(
+                id                = id,
+                freq              = freq,
+                prediction_length = horizon,
+                epochs            = gluonts_grid$epochs[i],
+                lookback_length   = gluonts_grid$lookback_length[i],
+                batch_size        = gluonts_grid$batch_size[i],
+                learn_rate        = gluonts_grid$learn_rate[i],
+                num_cells         = gluonts_grid$num_cells[i],
+                num_layers        = gluonts_grid$num_layers[i],
+                scale             = gluonts_grid$scale[i],
+                dropout           = gluonts_grid$dropout[i],
+                cell_type         = "lstm",
+            ) %>%
+                set_engine("gluonts_deepar")
+        }
+
 
         for (j in 1:cv_slice_limit) {
 

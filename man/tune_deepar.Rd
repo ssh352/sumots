@@ -16,13 +16,16 @@ tune_deepar(
   assess = "12 weeks",
   skip = "4 weeks",
   initial = "12 months",
+  multiple_gpu = FALSE,
+  no_gpu,
   epochs = NULL,
   lookback = NULL,
   batch_size = NULL,
   learn_rate = NULL,
   num_cells = NULL,
   num_layers = NULL,
-  scale = NULL
+  scale = NULL,
+  dropout = NULL
 )
 }
 \arguments{
@@ -43,6 +46,10 @@ tune_deepar(
 \item{skip}{A integer indicating how many (if any) additional resamples to skip to thin the total amount of data points in the analysis resample.}
 
 \item{initial}{The number of samples used for analysis/modeling in the initial resample.}
+
+\item{multiple_gpu}{Should more than one GPU be used}
+
+\item{no_gpu}{How many, if more than one, should be used}
 
 \item{epochs}{Number of epochs. Importance 1 of 7}
 
