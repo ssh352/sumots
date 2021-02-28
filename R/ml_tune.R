@@ -18,13 +18,18 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
                     ) {
 
     # Libraries
-    # require(tidyverse)
-    # require(timetk)
-    # require(modeltime)
-    # require(tidymodels)
-    # require(future)
-    # require(doFuture)
-    # require(tictoc)
+    require(lightgbm)
+
+    # Tidymodels
+    require(tidymodels)
+    require(treesnip)
+    require(tidyverse)
+
+    require(timetk)
+    require(modeltime)
+    require(future)
+    require(doFuture)
+    require(tictoc)
 
     # Cross validation
     #set.seed(123)
@@ -72,6 +77,9 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
     # Catboost
     if ("catboost" %in% models) {
         message("Start tuning Catboost")
+
+        set_dependency("boost_tree", eng = "catboost", "catboost")
+        set_dependency("boost_tree", eng = "catboost", "treesnip")
 
         model_spec_catboost_tune <- boost_tree(
             mode           = "regression",

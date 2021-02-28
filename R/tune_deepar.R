@@ -68,6 +68,17 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
     wflw_list   <- list()
     wflw_return <- list()
 
+    # Create accuracy log file
+    if(!dir.exists("accuracy_log")) {
+        dir.create("accuracy_log")
+    }
+
+    log_accuracy_file_name <- paste0("log_accuracy", "_", timestamp(prefix = "", suffix = "", quiet = TRUE), ".csv")
+    path_to_file <- paste0("accuracy_log/", log_accuracy_file_name)
+    path_to_file <- gsub(" ", "_", path_to_file)
+    path_to_file <- gsub(":", "_", path_to_file)
+
+
     for(i in 1:nrow(gluonts_grid)) {
         message("")
         message(str_glue("Parameter set number {i} of {nrow(gluonts_grid)}"))
@@ -103,7 +114,7 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
                 num_layers        = gluonts_grid$num_layers[i],
                 scale             = gluonts_grid$scale[i],
                 dropout           = gluonts_grid$dropout[i],
-                cell_type         = "lstm",
+                cell_type         = "lstm"
             ) %>%
                 set_engine("gluonts_deepar", ctx = ctx_list)
 
@@ -120,7 +131,7 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
                 num_layers        = gluonts_grid$num_layers[i],
                 scale             = gluonts_grid$scale[i],
                 dropout           = gluonts_grid$dropout[i],
-                cell_type         = "lstm",
+                cell_type         = "lstm"
             ) %>%
                 set_engine("gluonts_deepar")
         }
@@ -152,6 +163,20 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
 
         deepar_list[[i]] <- bind_rows(cv_list)
         wflw_return[[i]] <- wflw_fit_deepar_1
+
+
+
+        if(!file.exists(path_to_file)) {
+            message("Writing data to {path_to_file}")
+            bind_rows(deepar_list) %>% readr::write_csv(path_to_file)
+
+        } else {
+            message("Reading in old data and writing new to {path_to_file}")
+            old_file <- readr::read_csv(path_to_file)
+            new_file <- bind_rows(bind_rows(deepar_list), old_file)
+            new_file %>% readr::write_csv(path_to_file)
+
+        }
 
     }
 

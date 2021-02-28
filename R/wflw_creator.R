@@ -13,17 +13,42 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
 
     return_list <- list()
 
+    engine <- model_spec$engine
+
     wflw <- workflow() %>%
         add_model(model_spec) %>%
         add_recipe(ml_recipe)
 
-    tune_results <- tune_grid(
-        object     = wflw,
-        resamples  = resamples_kfold,
-        param_info = parameters(wflw),
-        grid       = grid_size,
-        control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_type)
-    )
+    # tune_results <- tune_grid(
+    #     object     = wflw,
+    #     resamples  = resamples_kfold,
+    #     param_info = parameters(wflw),
+    #     grid       = grid_size,
+    #     control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_type)
+    # )
+
+    if(engine %in% c("lightgbm", "catboost")) {
+        tune_results <- tune_grid(
+            object     = wflw,
+            resamples  = resamples_kfold,
+            param_info = parameters(wflw) %>%
+                update(
+                    sample_size = sample_prop(range = c(0, 1))
+                ),
+            grid       = grid_size,
+            control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_type)
+        )
+
+    } else {
+        tune_results <- tune_grid(
+            object     = wflw,
+            resamples  = resamples_kfold,
+            param_info = parameters(wflw),
+            grid       = grid_size,
+            control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_type)
+        )
+
+    }
 
     best_results <- tune_results %>%
         show_best(metric = "rmse", n = 1)
