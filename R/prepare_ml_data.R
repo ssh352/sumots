@@ -19,12 +19,13 @@
 #' @param no_fourier_terms Number of fourier terms, defultas to 5
 #' @param fourier_k The fourier term order, defaults to 5
 #' @param slidify_period The window size, defaults to c(4, 8)
+#' @param use_lag Should lag of outcome variable be used. Defaults to use
 #'
 #' @return List with data_prepared, future_data, train_data, splits and horizon
 
 
 data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size = 52, trailing_zero = FALSE, transformation = "none",
-                           use_holidays = FALSE, holidays_to_use_1, holidays_to_use_2, use_covid = FALSE, covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,
+                           use_holidays = FALSE, holidays_to_use_1, holidays_to_use_2, use_lag = TRUE, use_covid = FALSE, covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,
                            use_holiday_to_clean = FALSE, holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5, fourier_k = 5,
                            slidify_period = c(4, 8)) {
 
@@ -198,38 +199,61 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
 
 
     # Full data
-    if (use_abc_category) {
-        full_data_tbl <- df %>%
-            arrange(id, abc, date) %>%
-            group_by(id) %>%
-            tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
-            tk_augment_lags(.value = outcome, .lags = horizon) %>%
-            tk_augment_slidify(
-                contains("_lag"),
-                .f = ~mean(.x, na.rm = TRUE),
-                .period  = slidify_period,
-                .partial = TRUE,
-                .align   = "center"
-            ) %>%
-            ungroup() %>%
-            rowid_to_column(var = "rowid")
+    if (use_lag) {
+        if (use_abc_category) {
+            full_data_tbl <- df %>%
+                arrange(id, abc, date) %>%
+                group_by(id) %>%
+                tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+                tk_augment_lags(.value = outcome, .lags = horizon) %>%
+                tk_augment_slidify(
+                    contains("_lag"),
+                    .f = ~mean(.x, na.rm = TRUE),
+                    .period  = slidify_period,
+                    .partial = TRUE,
+                    .align   = "center"
+                ) %>%
+                ungroup() %>%
+                rowid_to_column(var = "rowid")
+
+        } else {
+            full_data_tbl <- df %>%
+                arrange(id, date) %>%
+                group_by(id) %>%
+                tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+                tk_augment_lags(.value = outcome, .lags = horizon) %>%
+                tk_augment_slidify(
+                    contains("_lag"),
+                    .f = ~mean(.x, na.rm = TRUE),
+                    .period  = slidify_period,
+                    .partial = TRUE,
+                    .align   = "center"
+                ) %>%
+                ungroup() %>%
+                rowid_to_column(var = "rowid")
+        }
 
     } else {
-        full_data_tbl <- df %>%
-            arrange(id, date) %>%
-            group_by(id) %>%
-            tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
-            tk_augment_lags(.value = outcome, .lags = horizon) %>%
-            tk_augment_slidify(
-                contains("_lag"),
-                .f = ~mean(.x, na.rm = TRUE),
-                .period  = slidify_period,
-                .partial = TRUE,
-                .align   = "center"
-            ) %>%
-            ungroup() %>%
-            rowid_to_column(var = "rowid")
+
+        if (use_abc_category) {
+            full_data_tbl <- df %>%
+                arrange(id, abc, date) %>%
+                group_by(id) %>%
+                tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+                ungroup() %>%
+                rowid_to_column(var = "rowid")
+
+        } else {
+            full_data_tbl <- df %>%
+                arrange(id, date) %>%
+                group_by(id) %>%
+                tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+                ungroup() %>%
+                rowid_to_column(var = "rowid")
+        }
+
     }
+
 
 
 
