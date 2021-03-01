@@ -7,7 +7,8 @@
 #' @param trailing_zero Extends all time series, back and forward, so they will be the same length. Defaults to FALSE
 #' @param transformation Should the series be transformed, e.g. log or log1p. Defaults to none
 #' @param use_holidays Should national holidays be included. As of now this has to be a dataframe supplied by the user to the holidays_to_use argument
-#' @param holidays_to_use Data frame of holidays. Outcome of the create_holiday() function: fridagar_tbl
+#' @param holidays_to_use_1 Data frame of dummy holidays. Outcome of the create_holiday() function: fridagar_tbl
+#' @param holidays_to_use_2 Data frame of holidays, one variable.
 #' @param use_covid Should information on covid be used. Data frame has to be supplied by user to the covid_data argument
 #' @param covid_data Data frame to capture the effect of covid. Has to include one date column and one covid column
 #' @param horizon The forecast horizon
@@ -23,7 +24,7 @@
 
 
 data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size = 52, trailing_zero = FALSE, transformation = "none",
-                           use_holidays = FALSE, holidays_to_use, use_covid = FALSE, covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,
+                           use_holidays = FALSE, holidays_to_use_1, holiday_to_use_2, use_covid = FALSE, covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,
                            use_holiday_to_clean = FALSE, holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5, fourier_k = 5,
                            slidify_period = c(4, 8)) {
 
@@ -139,7 +140,18 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
 
     # Holidays
     if (use_holidays) {
-        df <- df %>% left_join(holidays_to_use)
+
+        if(!is.null(holidays_to_use_2)) {
+            df <- df %>%
+                left_join(holidays_to_use_1) %>%
+                left_join(holidays_to_use_2)
+
+        } else {
+            df <- df %>%
+                left_join(holidays_to_use_1)
+
+        }
+
     } else {
         df
     }

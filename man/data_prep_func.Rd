@@ -13,7 +13,8 @@ data_prep_func(
   trailing_zero = FALSE,
   transformation = "none",
   use_holidays = FALSE,
-  holidays_to_use,
+  holidays_to_use_1,
+  holiday_to_use_2,
   use_covid = FALSE,
   covid_data,
   horizon = 12,
@@ -43,7 +44,7 @@ data_prep_func(
 
 \item{use_holidays}{Should national holidays be included. As of now this has to be a dataframe supplied by the user to the holidays_to_use argument}
 
-\item{holidays_to_use}{Data frame of holidays. Outcome of the create_holiday() function: fridagar_tbl}
+\item{holidays_to_use_1}{Data frame of dummy holidays. Outcome of the create_holiday() function: fridagar_tbl}
 
 \item{use_covid}{Should information on covid be used. Data frame has to be supplied by user to the covid_data argument}
 
@@ -64,6 +65,8 @@ data_prep_func(
 \item{fourier_k}{The fourier term order, defaults to 5}
 
 \item{slidify_period}{The window size, defaults to c(4, 8)}
+
+\item{holidays_to_use_2}{Data frame of holidays, one variable.}
 }
 \value{
 List with data_prepared, future_data, train_data, splits and horizon
