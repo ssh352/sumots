@@ -2,12 +2,14 @@
 #'
 #' @param data Data set with date and character vector of holiday names
 #' @param lead_lag_one TRUE if lead and lag of the dummy are also 1 instead of -0.5 for lag and 0.5 for lead to capture different effect of lead and lag holiday
+#' @param create_lead_lag Should leads and lags be created
 #' @param to_weekly Should data be converted to weekly data. Defaults to TRUE.
 #'
 #' @returns Returns list with two data set: holidays_for_ml which is for ML algos and holidays_for_clean which will be used when cleaning the data
 
 
-create_holiday <- function(data, to_weekly = TRUE, lead_lag_one = TRUE) {
+create_holiday <- function(data, to_weekly = TRUE, create_lead_lag = TRUE, lead_lag_one = TRUE) {
+
 
     # Bý til breytu fyrir alla daga frá 1990 til 2040
     # Skeiti frídögum við og breyti yfir í vikugögn
@@ -24,16 +26,15 @@ create_holiday <- function(data, to_weekly = TRUE, lead_lag_one = TRUE) {
         # Bý til wide format af frídögum með heitið holiday_
         holiday_factor <- data %>%
             mutate(date = as.Date(date),
-                   date = floor_date(date, "week", week_start = 1),
-                   year = year(date)) %>%
+                   date = floor_date(date, "week", week_start = 1)) %>%
             group_by(date) %>%
             dplyr::slice(1) %>%
-            group_by(year) %>%
-            mutate(holiday_factor = paste("holiday", 1:n(), sep = "_")) %>%
-            ungroup() %>%
-            select(-c(holiday, year)) %>%
+            # group_by(year) %>%
+            # mutate(holiday_factor = paste("holiday", 1:n(), sep = "_")) %>%
+            # ungroup() %>%
+            # select(-c(holiday, year)) %>%
             mutate(helper = 1) %>%
-            pivot_wider(names_from = holiday_factor, values_from = helper)
+            pivot_wider(names_from = holiday, values_from = helper)
 
 
         # Bý til lead og lag fyrir hvern frídag
@@ -41,22 +42,45 @@ create_holiday <- function(data, to_weekly = TRUE, lead_lag_one = TRUE) {
         # líkt og dummy. Ef FALSE þá bý ég til -0.5 og +0.5 fyrir lead og lag til að fanga
         # ólík áhrif vikuna fyrir frídag og vikuna eftir frídag
 
-        if (lead_lag_one) {
-            holiday_factor_final <- date_tbl %>%
-                mutate(date = floor_date(date, "week", week_start = 1)) %>%
-                distinct() %>%
-                left_join(holiday_factor) %>%
-                pivot_longer(cols = contains("holiday"),
-                             names_to = "holiday",
-                             values_to = "holiday_dummy") %>%
-                group_by(holiday) %>%
-                mutate(lead_value = lead(holiday_dummy),
-                       lag_value  = lag(holiday_dummy)) %>%
-                replace(is.na(.), 0) %>%
-                ungroup() %>%
-                mutate(value = rowSums(.[3:5])) %>%
-                select(-c(lead_value, lag_value, holiday_dummy)) %>%
-                pivot_wider(names_from = holiday, values_from = value)
+        if(create_lead_lag) {
+
+            if (lead_lag_one) {
+                holiday_factor_final <- date_tbl %>%
+                    mutate(date = floor_date(date, "week", week_start = 1)) %>%
+                    distinct() %>%
+                    left_join(holiday_factor) %>%
+                    pivot_longer(cols = -date,
+                                 names_to = "holiday",
+                                 values_to = "holiday_dummy") %>%
+                    group_by(holiday) %>%
+                    mutate(lead_value = lead(holiday_dummy),
+                           lag_value  = lag(holiday_dummy)) %>%
+                    replace(is.na(.), 0) %>%
+                    ungroup() %>%
+                    mutate(value = rowSums(.[3:5])) %>%
+                    select(-c(lead_value, lag_value, holiday_dummy)) %>%
+                    pivot_wider(names_from = holiday, values_from = value)
+
+            } else {
+
+                holiday_factor_final <- date_tbl %>%
+                    mutate(date = floor_date(date, "week", week_start = 1)) %>%
+                    distinct() %>%
+                    left_join(holiday_factor) %>%
+                    pivot_longer(cols = -date,
+                                 names_to = "holiday",
+                                 values_to = "holiday_dummy") %>%
+                    group_by(holiday) %>%
+                    mutate(lead_value = lead(holiday_dummy),
+                           lag_value  = lag(holiday_dummy)) %>%
+                    replace(is.na(.), 0) %>%
+                    mutate(lag_value  = ifelse(lag_value == 0, 0, -0.5),
+                           lead_value = ifelse(lead_value == 0, 0, 0.5)) %>%
+                    ungroup() %>%
+                    mutate(value = rowSums(.[3:5])) %>%
+                    select(-c(lead_value, lag_value, holiday_dummy)) %>%
+                    pivot_wider(names_from = holiday, values_from = value)
+            }
 
         } else {
 
@@ -64,19 +88,8 @@ create_holiday <- function(data, to_weekly = TRUE, lead_lag_one = TRUE) {
                 mutate(date = floor_date(date, "week", week_start = 1)) %>%
                 distinct() %>%
                 left_join(holiday_factor) %>%
-                pivot_longer(cols = contains("holiday"),
-                             names_to = "holiday",
-                             values_to = "holiday_dummy") %>%
-                group_by(holiday) %>%
-                mutate(lead_value = lead(holiday_dummy),
-                       lag_value  = lag(holiday_dummy)) %>%
-                replace(is.na(.), 0) %>%
-                mutate(lag_value  = ifelse(lag_value == 0, 0, -0.5),
-                       lead_value = ifelse(lead_value == 0, 0, 0.5)) %>%
-                ungroup() %>%
-                mutate(value = rowSums(.[3:5])) %>%
-                select(-c(lead_value, lag_value, holiday_dummy)) %>%
-                pivot_wider(names_from = holiday, values_from = value)
+                replace(is.na(.), 0)
+
         }
 
 
@@ -118,21 +131,21 @@ create_holiday <- function(data, to_weekly = TRUE, lead_lag_one = TRUE) {
 
         return(return_list)
 
+
         # EF EKKI TO WEEKLY
     } else {
 
         # Bý til wide format af frídögum með heitið holiday_
         holiday_factor <- data %>%
-            mutate(date = as.Date(date),
-                   year = year(date)) %>%
+            mutate(date = as.Date(date)) %>%
             group_by(date) %>%
             dplyr::slice(1) %>%
-            group_by(year) %>%
-            mutate(holiday_factor = paste("holiday", 1:n(), sep = "_")) %>%
-            ungroup() %>%
-            select(-c(holiday, year)) %>%
+            # group_by(year) %>%
+            # mutate(holiday_factor = paste("holiday", 1:n(), sep = "_")) %>%
+            # ungroup() %>%
+            # select(-c(holiday, year)) %>%
             mutate(helper = 1) %>%
-            pivot_wider(names_from = holiday_factor, values_from = helper)
+            pivot_wider(names_from = holiday, values_from = helper)
 
 
         # Bý til lead og lag fyrir hvern frídag
@@ -140,43 +153,53 @@ create_holiday <- function(data, to_weekly = TRUE, lead_lag_one = TRUE) {
         # líkt og dummy. Ef FALSE þá bý ég til -0.5 og +0.5 fyrir lead og lag til að fanga
         # ólík áhrif vikuna fyrir frídag og vikuna eftir frídag
 
-        if (lead_lag_one) {
-            holiday_factor_final <- date_tbl %>%
-                mutate(date = floor_date(date, "week", week_start = 1)) %>%
-                distinct() %>%
-                left_join(holiday_factor) %>%
-                pivot_longer(cols = contains("holiday"),
-                             names_to = "holiday",
-                             values_to = "holiday_dummy") %>%
-                group_by(holiday) %>%
-                mutate(lead_value = lead(holiday_dummy),
-                       lag_value  = lag(holiday_dummy)) %>%
-                replace(is.na(.), 0) %>%
-                ungroup() %>%
-                mutate(value = rowSums(.[3:5])) %>%
-                select(-c(lead_value, lag_value, holiday_dummy)) %>%
-                pivot_wider(names_from = holiday, values_from = value)
+        if (create_lead_lag) {
+
+            if (lead_lag_one) {
+                holiday_factor_final <- date_tbl %>%
+                    distinct() %>%
+                    left_join(holiday_factor) %>%
+                    pivot_longer(cols = -date,
+                                 names_to = "holiday",
+                                 values_to = "holiday_dummy") %>%
+                    group_by(holiday) %>%
+                    mutate(lead_value = lead(holiday_dummy),
+                           lag_value  = lag(holiday_dummy)) %>%
+                    replace(is.na(.), 0) %>%
+                    ungroup() %>%
+                    mutate(value = rowSums(.[3:5])) %>%
+                    select(-c(lead_value, lag_value, holiday_dummy)) %>%
+                    pivot_wider(names_from = holiday, values_from = value)
+
+            } else {
+
+                holiday_factor_final <- date_tbl %>%
+                    distinct() %>%
+                    left_join(holiday_factor) %>%
+                    pivot_longer(cols = -date,
+                                 names_to = "holiday",
+                                 values_to = "holiday_dummy") %>%
+                    group_by(holiday) %>%
+                    mutate(lead_value = lead(holiday_dummy),
+                           lag_value  = lag(holiday_dummy)) %>%
+                    replace(is.na(.), 0) %>%
+                    mutate(lag_value  = ifelse(lag_value == 0, 0, -0.5),
+                           lead_value = ifelse(lead_value == 0, 0, 0.5)) %>%
+                    ungroup() %>%
+                    mutate(value = rowSums(.[3:5])) %>%
+                    select(-c(lead_value, lag_value, holiday_dummy)) %>%
+                    pivot_wider(names_from = holiday, values_from = value)
+            }
 
         } else {
 
             holiday_factor_final <- date_tbl %>%
-                mutate(date = floor_date(date, "week", week_start = 1)) %>%
                 distinct() %>%
                 left_join(holiday_factor) %>%
-                pivot_longer(cols = contains("holiday"),
-                             names_to = "holiday",
-                             values_to = "holiday_dummy") %>%
-                group_by(holiday) %>%
-                mutate(lead_value = lead(holiday_dummy),
-                       lag_value  = lag(holiday_dummy)) %>%
-                replace(is.na(.), 0) %>%
-                mutate(lag_value  = ifelse(lag_value == 0, 0, -0.5),
-                       lead_value = ifelse(lead_value == 0, 0, 0.5)) %>%
-                ungroup() %>%
-                mutate(value = rowSums(.[3:5])) %>%
-                select(-c(lead_value, lag_value, holiday_dummy)) %>%
-                pivot_wider(names_from = holiday, values_from = value)
+                replace(is.na(.), 0)
+
         }
+
 
 
         # Lengd milli frídaga
@@ -184,14 +207,12 @@ create_holiday <- function(data, to_weekly = TRUE, lead_lag_one = TRUE) {
         lengd_milli_fridaga <- data %>%
             select(-holiday) %>%
             distinct() %>%
-            mutate(date = as.Date(floor_date(date, "week", week_start = 1))) %>%
-            mutate(lengd_milli = as.numeric(date - lag(date)) / 7) %>%
+            mutate(lengd_milli = as.numeric(date - lag(date))) %>%
             group_by(date) %>%
             filter(lengd_milli == max(lengd_milli, na.rm = TRUE))
 
 
         lengd_milli_fridaga <- date_tbl %>%
-            mutate(date = floor_date(date, "week", week_start = 1)) %>%
             distinct() %>% left_join(lengd_milli_fridaga) %>%
             mutate(lengd_milli = ifelse(is.na(lengd_milli), 0, lengd_milli),
                    lengd_milli_lead = lead(lengd_milli),
