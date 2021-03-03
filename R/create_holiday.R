@@ -118,8 +118,8 @@ create_holiday <- function(data, to_weekly = TRUE, create_lead_lag = TRUE, lead_
 
         # Ein breyta með frídögum
         fridagar_one_var <- fridagar_tbl %>%
-            select(date, contains("holiday_")) %>%
-            pivot_longer(cols = contains("holiday_")) %>%
+            select(everything(), -contains("lengd_")) %>%
+            pivot_longer(cols = -date) %>%
             group_by(date) %>%
             summarise(value = sum(value)) %>%
             mutate(value = ifelse(value == 0, 0, 1))
@@ -224,12 +224,14 @@ create_holiday <- function(data, to_weekly = TRUE, create_lead_lag = TRUE, lead_
 
 
         # Ein breyta með frídögum
+
         fridagar_one_var <- fridagar_tbl %>%
-            select(date, contains("holiday_")) %>%
-            pivot_longer(cols = contains("holiday_")) %>%
+            select(everything(), -contains("lengd_")) %>%
+            pivot_longer(cols = -date) %>%
             group_by(date) %>%
             summarise(value = sum(value)) %>%
             mutate(value = ifelse(value == 0, 0, 1))
+
 
         # Return list
         return_list <- list()
