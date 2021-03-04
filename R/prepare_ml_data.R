@@ -27,7 +27,7 @@
 data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size = 52, trailing_zero = FALSE, transformation = "none",
                            use_holidays = FALSE, holidays_to_use_1, holidays_to_use_2, use_lag = TRUE, use_covid = FALSE, covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,
                            use_holiday_to_clean = FALSE, holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5, fourier_k = 5,
-                           slidify_period = c(4, 8)) {
+                           slidify_period = c(4, 8), fourier_terms) {
 
     require(tidyverse)
     require(timetk)
@@ -197,6 +197,8 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     fourier_periods <- c(fourier_periods, 52/2,  52)
     fourier_periods <- unique(fourier_periods)
 
+    message(stringr::str_glue("Consider using: {fourier_periods}. You have manually selected: {fourier_terms}"))
+
 
     # Full data
     if (use_lag) {
@@ -204,7 +206,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
             full_data_tbl <- df %>%
                 arrange(id, abc, date) %>%
                 group_by(id) %>%
-                tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+                tk_augment_fourier(date, .periods = fourier_terms, .K = fourier_k) %>%
                 tk_augment_lags(.value = outcome, .lags = horizon) %>%
                 tk_augment_slidify(
                     contains("_lag"),
@@ -220,7 +222,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
             full_data_tbl <- df %>%
                 arrange(id, date) %>%
                 group_by(id) %>%
-                tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+                tk_augment_fourier(date, .periods = fourier_terms, .K = fourier_k) %>%
                 tk_augment_lags(.value = outcome, .lags = horizon) %>%
                 tk_augment_slidify(
                     contains("_lag"),
@@ -239,7 +241,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
             full_data_tbl <- df %>%
                 arrange(id, abc, date) %>%
                 group_by(id) %>%
-                tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+                tk_augment_fourier(date, .periods = fourier_terms, .K = fourier_k) %>%
                 ungroup() %>%
                 rowid_to_column(var = "rowid")
 
@@ -247,7 +249,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
             full_data_tbl <- df %>%
                 arrange(id, date) %>%
                 group_by(id) %>%
-                tk_augment_fourier(date, .periods = fourier_periods, .K = fourier_k) %>%
+                tk_augment_fourier(date, .periods = fourier_terms, .K = fourier_k) %>%
                 ungroup() %>%
                 rowid_to_column(var = "rowid")
         }
