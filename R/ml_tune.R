@@ -39,6 +39,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
     model_list <- list()
     model_table <- modeltime_table()
     finalized_wflw <- list()
+    tune_plot      <- list()
 
     # Light GBM
     if ("lightgbm" %in% models) {
@@ -67,6 +68,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         finalized_wflw$lightgbm <- wflw_fit_lightgbm$finalized_workflow
 
+        tune_plot$lightgbm <- wflw_fit_lightgbm$tune_plot
 
         message("Finish tuning Lightgbm")
         toc()
@@ -103,6 +105,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         finalized_wflw$catboost <- wflw_fit_catboost$finalized_workflow
 
+        tune_plot$catboost <- wflw_fit_catboost$tune_plot
 
         message("Finish tuning Catboost")
         toc()
@@ -138,6 +141,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         finalized_wflw$xgboost <- wflw_fit_xgboost$finalized_workflow
 
+        tune_plot$xgboost <- wflw_fit_xgboost$tune_plot
 
         message("Finish tuning XGBoost")
         toc()
@@ -169,6 +173,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         finalized_wflw$ranger <- wflw_fit_rf$finalized_workflow
 
+        tune_plot$ranger <- wflw_fit_rf$tune_plot
+
         message("Finish tuning Random Forest")
         toc()
         gc()
@@ -197,6 +203,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
             combine_modeltime_tables(wflw_fit_cubist$fitted_workflow %>% modeltime_table())
 
         finalized_wflw$Cubist <- wflw_fit_cubist$finalized_workflow
+
+        tune_plot$Cubist <- wflw_fit_cubist$tune_plot
 
         message("Finish tuning Cubist")
         toc()
@@ -227,6 +235,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         finalized_wflw$svm_rbf <- wflw_fit_svm_rbf$finalized_workflow
 
+        tune_plot$svm_rbf <- wflw_fit_svm_rbf$tune_plot
 
         message("Finish tuning SVM (radial basis")
         toc()
@@ -259,6 +268,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         finalized_wflw$svm_poly <- wflw_fit_svm_poly$finalized_workflow
 
+        tune_plot$svm_poly <- wflw_fit_svm_poly$tune_plot
 
         message("Finish tuning SVM (polynomial")
         toc()
@@ -288,6 +298,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         finalized_wflw$glmnet <- wflw_fit_glmnet$finalized_workflow
 
+        tune_plot$glmnet <- wflw_fit_glmnet$tune_plot
 
         message("Finish tuning Elastic net")
         toc()
@@ -318,6 +329,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         finalized_wflw$kknn <- wflw_fit_knn$finalized_workflow
 
+        tune_plot$kknn <- wflw_fit_knn$tune_plot
 
         message("Finish tuning KNN")
         toc()
@@ -347,6 +359,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         finalized_wflw$mars <- wflw_fit_mars$finalized_workflow
 
+        tune_plot$mars <- wflw_fit_mars$tune_plot
 
         message("Finish tuning MARS")
         toc()
@@ -386,6 +399,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         finalized_wflw$prophet_xgboost <- wflw_fit_prophet_boost$finalized_workflow
 
+        tune_plot$prophet_xgboost <- wflw_fit_prophet_boost$tune_plot
 
         message("Finish tuning Prophet Boost")
         toc()
@@ -398,7 +412,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
     return_list$models <- model_list
     return_list$modeltime_table <- model_table
     return_list$finalized_workflows <- finalized_wflw
-
+    return_list$tune_plot <- tune_plot
 
     if (return == "modellist") {
         return(model_list)

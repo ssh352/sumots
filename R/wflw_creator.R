@@ -53,6 +53,9 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
     best_results <- tune_results %>%
         show_best(metric = "rmse", n = 1)
 
+    tune_plot <- tune_results %>%
+        autoplot()
+
     fin_wflw <- wflw %>%
         finalize_workflow(parameters = best_results %>% dplyr::slice(1))
 
@@ -61,6 +64,7 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
 
     return_list$fitted_workflow    <- wflw_fit
     return_list$finalized_workflow <- fin_wflw
+    return_list$tune_plot          <- tune_plot
 
 
     return(return_list)
