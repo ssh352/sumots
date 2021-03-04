@@ -197,8 +197,6 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     fourier_periods <- c(fourier_periods, 52/2,  52)
     fourier_periods <- unique(fourier_periods)
 
-    message(stringr::str_glue("Consider using: {fourier_periods}. You have manually selected: {fourier_terms}"))
-
 
     # Full data
     if (use_lag) {
@@ -394,6 +392,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     return_list$train_data    <- train_data
     return_list$horizon       <- horizon
     return_list$one_obs_id    <- one_obs_id_tbl
+    return_list$fourier_terms <- fourier_periods
 
     return(return_list)
 
