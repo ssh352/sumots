@@ -28,6 +28,7 @@ data_prep_func(
   no_fourier_terms = 5,
   fourier_k = 5,
   slidify_period = c(4, 8),
+  use_own_fourier = FALSE,
   fourier_terms,
   recursive_data = FALSE,
   no_recursive_lag
@@ -74,11 +75,13 @@ data_prep_func(
 
 \item{slidify_period}{The window size, defaults to c(4, 8)}
 
-\item{fourier_terms}{The fourier terms to include,}
+\item{use_own_fourier}{Should you use your own fourier terms? Defaults to FALSE}
+
+\item{fourier_terms}{The fourier terms to include.}
 
 \item{recursive_data}{Should the data be prepared for a recursive forecasting. Defaults to FALSE.}
 
-\item{no_recursive_lag}{The number of lags to be .}
+\item{no_recursive_lag}{The number of lags to be.}
 }
 \value{
 List with data_prepared, future_data, train_data, splits and horizon

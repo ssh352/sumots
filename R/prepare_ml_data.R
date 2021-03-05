@@ -20,9 +20,10 @@
 #' @param fourier_k The fourier term order, defaults to 5
 #' @param slidify_period The window size, defaults to c(4, 8)
 #' @param use_seasonal_lag Should lag of outcome variable, equal to the seasonality, be used. Defaults to TRUE.
-#' @param fourier_terms The fourier terms to include,
+#' @param use_own_fourier Should you use your own fourier terms? Defaults to FALSE
+#' @param fourier_terms The fourier terms to include.
 #' @param recursive_data Should the data be prepared for a recursive forecasting. Defaults to FALSE.
-#' @param no_recursive_lag The number of lags to be .
+#' @param no_recursive_lag The number of lags to be.
 #'
 #' @return List with data_prepared, future_data, train_data, splits and horizon
 
@@ -32,7 +33,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                            holidays_to_use_1, holidays_to_use_2, use_seasonal_lag = TRUE, use_covid = FALSE,
                            covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,  use_holiday_to_clean = FALSE,
                            holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5,
-                           fourier_k = 5, slidify_period = c(4, 8), fourier_terms, recursive_data = FALSE, no_recursive_lag) {
+                           fourier_k = 5, slidify_period = c(4, 8), use_own_fourier = FALSE, fourier_terms, recursive_data = FALSE, no_recursive_lag) {
 
     require(tidyverse)
     require(timetk)
@@ -202,6 +203,11 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     fourier_periods <- c(fourier_periods, 52/2,  52)
     fourier_periods <- unique(fourier_periods)
 
+    if (use_own_fourier) {
+        fourier_terms <- fourier_terms
+    } else {
+        fourier_terms <- fourier_periods
+    }
 
     # Full data
     if (recursive_data) {
