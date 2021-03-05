@@ -4,10 +4,19 @@
 \alias{create_holiday}
 \title{Creates holiday variables to be used in modeling}
 \usage{
-create_holiday(data, lead_lag_one = TRUE)
+create_holiday(
+  data,
+  to_weekly = TRUE,
+  create_lead_lag = TRUE,
+  lead_lag_one = TRUE
+)
 }
 \arguments{
 \item{data}{Data set with date and character vector of holiday names}
+
+\item{to_weekly}{Should data be converted to weekly data. Defaults to TRUE.}
+
+\item{create_lead_lag}{Should leads and lags be created}
 
 \item{lead_lag_one}{TRUE if lead and lag of the dummy are also 1 instead of -0.5 for lag and 0.5 for lead to capture different effect of lead and lag holiday}
 }

@@ -15,7 +15,7 @@ data_prep_func(
   use_holidays = FALSE,
   holidays_to_use_1,
   holidays_to_use_2,
-  use_lag = TRUE,
+  use_seasonal_lag = TRUE,
   use_covid = FALSE,
   covid_data,
   horizon = 12,
@@ -27,7 +27,10 @@ data_prep_func(
   pacf_threshold = 0.2,
   no_fourier_terms = 5,
   fourier_k = 5,
-  slidify_period = c(4, 8)
+  slidify_period = c(4, 8),
+  fourier_terms,
+  recursive_data = FALSE,
+  no_recursive_lag
 )
 }
 \arguments{
@@ -49,7 +52,7 @@ data_prep_func(
 
 \item{holidays_to_use_2}{Data frame of holidays, one variable.}
 
-\item{use_lag}{Should lag of outcome variable be used. Defaults to use}
+\item{use_seasonal_lag}{Should lag of outcome variable, equal to the seasonality, be used. Defaults to TRUE.}
 
 \item{use_covid}{Should information on covid be used. Data frame has to be supplied by user to the covid_data argument}
 
@@ -70,6 +73,12 @@ data_prep_func(
 \item{fourier_k}{The fourier term order, defaults to 5}
 
 \item{slidify_period}{The window size, defaults to c(4, 8)}
+
+\item{fourier_terms}{The fourier terms to include,}
+
+\item{recursive_data}{Should the data be prepared for a recursive forecasting. Defaults to FALSE.}
+
+\item{no_recursive_lag}{The number of lags to be .}
 }
 \value{
 List with data_prepared, future_data, train_data, splits and horizon
