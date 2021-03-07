@@ -31,7 +31,8 @@ data_prep_func(
   use_own_fourier = FALSE,
   fourier_terms,
   recursive_data = FALSE,
-  no_recursive_lag
+  no_recursive_lag,
+  xreg = NULL
 )
 }
 \arguments{
@@ -82,6 +83,8 @@ data_prep_func(
 \item{recursive_data}{Should the data be prepared for a recursive forecasting. Defaults to FALSE.}
 
 \item{no_recursive_lag}{The number of lags to be.}
+
+\item{xreg}{External regressors to add}
 }
 \value{
 List with data_prepared, future_data, train_data, splits and horizon

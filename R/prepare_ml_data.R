@@ -24,6 +24,7 @@
 #' @param fourier_terms The fourier terms to include.
 #' @param recursive_data Should the data be prepared for a recursive forecasting. Defaults to FALSE.
 #' @param no_recursive_lag The number of lags to be.
+#' @param xreg External regressors to add
 #'
 #' @return List with data_prepared, future_data, train_data, splits and horizon
 
@@ -33,7 +34,8 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                            holidays_to_use_1, holidays_to_use_2, use_seasonal_lag = TRUE, use_covid = FALSE,
                            covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,  use_holiday_to_clean = FALSE,
                            holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5,
-                           fourier_k = 5, slidify_period = c(4, 8), use_own_fourier = FALSE, fourier_terms, recursive_data = FALSE, no_recursive_lag) {
+                           fourier_k = 5, slidify_period = c(4, 8), use_own_fourier = FALSE, fourier_terms,
+                           recursive_data = FALSE, no_recursive_lag, xreg = NULL) {
 
     require(tidyverse)
     require(timetk)
@@ -143,6 +145,12 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
         future_frame(date, .length_out = horizon, .bind_data = TRUE) %>%
         fill(-outcome, .direction = "down") %>%
         ungroup()
+
+
+    if (!is.null(xreg)) {
+        df <- df %>%
+            left_join(xreg)
+    }
 
 
     # Holidays
