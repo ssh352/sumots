@@ -46,7 +46,7 @@ data_prep_func <- function(data, outcome_var, outcome_var_name = "outcome", nega
 
     # Rename outcome
     df <- data %>%
-        rename("outcome" = outcome_var_name)
+        rename(outcome_var_name = outcome_var)
 
 
     # Negative values
