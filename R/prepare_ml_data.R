@@ -29,7 +29,7 @@
 #' @return List with data_prepared, future_data, train_data, splits and horizon
 
 
-data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size = 52,
+data_prep_func <- function(data, outcome_var, outcome_var_name = "outcome", negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size = 52,
                            trailing_zero = FALSE, transformation = "none", use_holidays = FALSE,
                            holidays_to_use_1, holidays_to_use_2, use_seasonal_lag = TRUE, use_covid = FALSE,
                            covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,  use_holiday_to_clean = FALSE,
@@ -46,7 +46,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
 
     # Rename outcome
     df <- data %>%
-        rename("outcome" = outcome_var)
+        rename("outcome" = outcome_var_name)
 
 
     # Negative values
