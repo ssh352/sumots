@@ -183,39 +183,42 @@ data_prep_func <- function(data, outcome_var, outcome_var_name = "outcome", nega
 
 
     # Fourier period
-    if (use_abc_category) {
-        fourier_periods <- df %>%
-            filter(str_detect(abc, c("a|b"))) %>%
-            group_by(id) %>%
-            tk_acf_diagnostics(date, outcome) %>%
-            ungroup() %>%
-            filter(abs(PACF) > pacf_threshold) %>%
-            count(lag) %>%
-            arrange(desc(n)) %>%
-            filter(lag > 1) %>%
-            dplyr::slice(1:no_fourier_terms) %>%
-            pull(lag)
-    } else {
-        fourier_periods <- df %>%
-            group_by(id) %>%
-            tk_acf_diagnostics(date, outcome) %>%
-            ungroup() %>%
-            filter(abs(PACF) > pacf_threshold) %>%
-            count(lag) %>%
-            arrange(desc(n)) %>%
-            filter(lag > 1) %>%
-            dplyr::slice(1:no_fourier_terms) %>%
-            pull(lag)
-    }
-
-    fourier_periods <- c(fourier_periods, 52/2,  52)
-    fourier_periods <- unique(fourier_periods)
-
     if (use_own_fourier) {
         fourier_terms <- fourier_terms
+
     } else {
+        if (use_abc_category) {
+            fourier_periods <- df %>%
+                filter(str_detect(abc, c("a|b"))) %>%
+                group_by(id) %>%
+                tk_acf_diagnostics(date, outcome) %>%
+                ungroup() %>%
+                filter(abs(PACF) > pacf_threshold) %>%
+                count(lag) %>%
+                arrange(desc(n)) %>%
+                filter(lag > 1) %>%
+                dplyr::slice(1:no_fourier_terms) %>%
+                pull(lag)
+        } else {
+            fourier_periods <- df %>%
+                group_by(id) %>%
+                tk_acf_diagnostics(date, outcome) %>%
+                ungroup() %>%
+                filter(abs(PACF) > pacf_threshold) %>%
+                count(lag) %>%
+                arrange(desc(n)) %>%
+                filter(lag > 1) %>%
+                dplyr::slice(1:no_fourier_terms) %>%
+                pull(lag)
+        }
+
+        fourier_periods <- c(fourier_periods, 52/2,  52)
+        fourier_periods <- unique(fourier_periods)
+
         fourier_terms <- fourier_periods
     }
+
+
 
     # Full data
     if (recursive_data) {
