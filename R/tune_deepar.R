@@ -30,7 +30,7 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
         gluonts_grid <- data.frame(
             epochs          = if (is.null(epochs)) sample(100, size = length, replace = TRUE) else epochs,
             lookback_length = if (is.null(lookback)) sample(1:7 * horizon, size = length, replace = TRUE) else lookback,
-            batch_size      = if (is.null(batch_size)) round(runif(length, min = 32, max = 512), 0) else batch_size,
+            batch_size      = if (is.null(batch_size)) sample(seq(32, 512, 32), size = length, replace = TRUE) else batch_size,
             learn_rate      = if (is.null(learn_rate)) runif(length, min = 1e-4, max = 1e-1) else learn_rate,
             num_cells       = 40,
             num_layers      = 2,
@@ -41,7 +41,7 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
         gluonts_grid <- data.frame(
             epochs          = if (is.null(epochs)) sample(100, size = length, replace = FALSE) else  epochs,
             lookback_length = if (is.null(lookback)) sample(1:7 * horizon, size = length, replace = TRUE) else lookback,
-            batch_size      = if (is.null(batch_size)) round(runif(length, min = 32, max = 512), 0) else batch_size,
+            batch_size      = if (is.null(batch_size)) sample(seq(32, 512, 32), size = length, replace = TRUE) else batch_size,
             learn_rate      = if (is.null(learn_rate)) runif(length, min = 1e-4, max = 1e-1) else learn_rate,
             num_cells       = if (is.null(num_cells)) sample(30:100, size = length, replace = TRUE) else num_cells,
             num_layers      = if (is.null(num_layers)) sample(1:8, size = length, replace = TRUE) else num_layers,
