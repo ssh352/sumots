@@ -7,7 +7,6 @@
 data_prep_func(
   data,
   outcome_var,
-  outcome_var_name = "outcome",
   negative_to_zero = FALSE,
   fix_gap_size = FALSE,
   max_gap_size = 52,
