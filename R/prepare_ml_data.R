@@ -381,7 +381,8 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
         id_one_train <- training(splits) %>%
             group_by(id) %>%
             summarise(n = n_distinct(date)) %>%
-            filter(n == 1)
+            filter(n == 1) %>%
+            pull(id)
 
         data_prepared_tbl <- data_prepared_tbl %>%
             filter(!id %in% id_one_train)
