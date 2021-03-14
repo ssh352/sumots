@@ -18,10 +18,11 @@
 #' @param scale Scales numeric data by id group using mean = 0, standard deviation = 1 transformation. No info on importance
 #' @param multiple_gpu Should more than one GPU be used
 #' @param no_gpu How many, if more than one, should be used
+#' @param min_obs_cv_train Minimum observation in the training set during cross validation
 
 
 tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limit, most_important = TRUE, assess = "12 weeks",
-                        skip = "4 weeks", initial = "12 months", multiple_gpu = FALSE, no_gpu,
+                        skip = "4 weeks", initial = "12 months", multiple_gpu = FALSE, no_gpu, min_obs_cv_train = 1,
                         epochs = NULL, lookback = NULL, batch_size = NULL, learn_rate = NULL,
                         num_cells = NULL, num_layers = NULL, scale = NULL, dropout = NULL) {
 
@@ -139,10 +140,16 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
 
         for (j in 1:cv_slice_limit) {
 
+            id_to_remove <- training(resamples_tscv$splits[[j]]) %>%
+                group_by(id) %>%
+                summarise(no = n_distinct(date)) %>%
+                filter(no == min_obs_cv_train) %>%
+                pull(id)
+
             wflw_fit_deepar_1 <- workflow() %>%
                 add_model(model_spec) %>%
                 add_recipe(recipe) %>%
-                fit(training(resamples_tscv$splits[[j]]))
+                fit(training(resamples_tscv$splits[[j]]) %>% filter(!id %in% id_to_remove))
 
             cv_accuracy <- wflw_fit_deepar_1 %>%
                 modeltime_table() %>%

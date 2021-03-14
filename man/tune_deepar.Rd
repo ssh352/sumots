@@ -18,6 +18,7 @@ tune_deepar(
   initial = "12 months",
   multiple_gpu = FALSE,
   no_gpu,
+  min_obs_cv_train = 1,
   epochs = NULL,
   lookback = NULL,
   batch_size = NULL,
@@ -50,6 +51,8 @@ tune_deepar(
 \item{multiple_gpu}{Should more than one GPU be used}
 
 \item{no_gpu}{How many, if more than one, should be used}
+
+\item{min_obs_cv_train}{Minimum observation in the training set during cross validation}
 
 \item{epochs}{Number of epochs. Importance 1 of 7}
 
