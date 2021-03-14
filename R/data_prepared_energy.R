@@ -15,7 +15,7 @@
 prepare_energy_data <- function(data, outcome_var, horizon, xreg_tbl, slidify_period, transformation = "none",
                                 fourier_periods = NULL, drop_na = TRUE, use_holidays = FALSE, holidays_tbl,
                                 pacf_threshold = 0.2, no_fourier_terms = 10, fourier_k = 3,
-                                use_horizon_lag = TRUE) {
+                                use_horizon_lag = TRUE, use_own_fourier, own_fourier) {
 
     require(tidyverse)
     require(timetk)
@@ -90,34 +90,70 @@ prepare_energy_data <- function(data, outcome_var, horizon, xreg_tbl, slidify_pe
         slidify_period <- round(slidify_period, 0)
     }
 
-    if (use_horizon_lag) {
+    if (use_own_fourier) {
+
+        if (use_horizon_lag) {
 
 
-        full_data_tbl <- df %>%
-            arrange(id, datetime) %>%
-            group_by(id) %>%
-            tk_augment_fourier(datetime, .periods = fourier_periods, .K = fourier_k) %>%
-            tk_augment_lags(.value = outcome, .lags = horizon) %>%
-            tk_augment_slidify(
-                contains("outcome_lag"),
-                .f = ~mean(.x, na.rm = TRUE),
-                .period  = slidify_period,
-                .partial = TRUE,
-                .align   = "center"
-            ) %>%
-            ungroup() %>%
-            rowid_to_column(var = "rowid")
+            full_data_tbl <- df %>%
+                arrange(id, datetime) %>%
+                group_by(id) %>%
+                tk_augment_fourier(datetime, .periods = own_fourier, .K = fourier_k) %>%
+                tk_augment_lags(.value = outcome, .lags = horizon) %>%
+                tk_augment_slidify(
+                    contains("outcome_lag"),
+                    .f = ~mean(.x, na.rm = TRUE),
+                    .period  = slidify_period,
+                    .partial = TRUE,
+                    .align   = "center"
+                ) %>%
+                ungroup() %>%
+                rowid_to_column(var = "rowid")
+
+        } else {
+
+            full_data_tbl <- df %>%
+                arrange(id, datetime) %>%
+                group_by(id) %>%
+                tk_augment_fourier(datetime, .periods = own_fourier, .K = fourier_k) %>%
+                ungroup() %>%
+                rowid_to_column(var = "rowid")
+
+        }
 
     } else {
 
-        full_data_tbl <- df %>%
-            arrange(id, datetime) %>%
-            group_by(id) %>%
-            tk_augment_fourier(datetime, .periods = fourier_periods, .K = fourier_k) %>%
-            ungroup() %>%
-            rowid_to_column(var = "rowid")
+        if (use_horizon_lag) {
+
+
+            full_data_tbl <- df %>%
+                arrange(id, datetime) %>%
+                group_by(id) %>%
+                tk_augment_fourier(datetime, .periods = fourier_periods, .K = fourier_k) %>%
+                tk_augment_lags(.value = outcome, .lags = horizon) %>%
+                tk_augment_slidify(
+                    contains("outcome_lag"),
+                    .f = ~mean(.x, na.rm = TRUE),
+                    .period  = slidify_period,
+                    .partial = TRUE,
+                    .align   = "center"
+                ) %>%
+                ungroup() %>%
+                rowid_to_column(var = "rowid")
+
+        } else {
+
+            full_data_tbl <- df %>%
+                arrange(id, datetime) %>%
+                group_by(id) %>%
+                tk_augment_fourier(datetime, .periods = fourier_periods, .K = fourier_k) %>%
+                ungroup() %>%
+                rowid_to_column(var = "rowid")
+
+        }
 
     }
+
 
     # Necessary since the rolling features may contain NA's
     if (drop_na) {

@@ -18,7 +18,9 @@ prepare_energy_data(
   pacf_threshold = 0.2,
   no_fourier_terms = 10,
   fourier_k = 3,
-  use_horizon_lag = TRUE
+  use_horizon_lag = TRUE,
+  use_own_fourier,
+  own_fourier
 )
 }
 \arguments{
