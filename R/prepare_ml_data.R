@@ -25,7 +25,6 @@
 #' @param recursive_data Should the data be prepared for a recursive forecasting. Defaults to FALSE.
 #' @param no_recursive_lag The number of lags to be.
 #' @param xreg External regressors to add
-#' @param remove_one_obs_train Should id's with one observation in the TRAINING set be removed. Defaults to FALSE.
 #'
 #' @return List with data_prepared, future_data, train_data, splits and horizon
 
@@ -36,7 +35,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                            covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,  use_holiday_to_clean = FALSE,
                            holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5,
                            fourier_k = 5, slidify_period = c(4, 8), use_own_fourier = FALSE, fourier_terms,
-                           recursive_data = FALSE, no_recursive_lag, xreg = NULL, remove_one_obs_train = FALSE) {
+                           recursive_data = FALSE, no_recursive_lag, xreg = NULL) {
 
     require(tidyverse)
     require(timetk)
@@ -373,24 +372,6 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     # Split
     splits <- data_prepared_tbl %>%
         time_series_split(date, assess = horizon, cumulative = TRUE)
-
-
-    # delete id with one observation in the training set
-    if (remove_one_obs_train) {
-
-        id_one_train <- training(splits) %>%
-            group_by(id) %>%
-            summarise(n = n_distinct(date)) %>%
-            filter(n == 1) %>%
-            pull(id)
-
-        data_prepared_tbl <- data_prepared_tbl %>%
-            filter(!id %in% id_one_train)
-
-        splits <- data_prepared_tbl %>%
-            time_series_split(date, assess = horizon, cumulative = TRUE)
-
-    }
 
 
     # Train data

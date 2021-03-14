@@ -32,8 +32,7 @@ data_prep_func(
   fourier_terms,
   recursive_data = FALSE,
   no_recursive_lag,
-  xreg = NULL,
-  remove_one_obs_train = FALSE
+  xreg = NULL
 )
 }
 \arguments{
@@ -86,8 +85,6 @@ data_prep_func(
 \item{no_recursive_lag}{The number of lags to be.}
 
 \item{xreg}{External regressors to add}
-
-\item{remove_one_obs_train}{Should id's with one observation in the TRAINING set be removed. Defaults to FALSE.}
 }
 \value{
 List with data_prepared, future_data, train_data, splits and horizon
