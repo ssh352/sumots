@@ -20,6 +20,7 @@
 #' @param fourier_k The fourier term order, defaults to 5
 #' @param slidify_period The window size, defaults to c(4, 8)
 #' @param use_seasonal_lag Should lag of outcome variable, equal to the seasonality, be used. Defaults to TRUE.
+#' @param seasonal_frequency The frequency of the data. E.g. 52 for weekly data
 #' @param use_own_fourier Should you use your own fourier terms? Defaults to FALSE
 #' @param fourier_terms The fourier terms to include.
 #' @param recursive_data Should the data be prepared for a recursive forecasting. Defaults to FALSE.
@@ -31,7 +32,7 @@
 
 data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size = 52,
                            trailing_zero = FALSE, transformation = "none", use_holidays = FALSE,
-                           holidays_to_use_1, holidays_to_use_2, use_seasonal_lag = TRUE, use_covid = FALSE,
+                           holidays_to_use_1, holidays_to_use_2, use_seasonal_lag = TRUE, seasonal_frequency, use_covid = FALSE,
                            covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,  use_holiday_to_clean = FALSE,
                            holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5,
                            fourier_k = 5, slidify_period = c(4, 8), use_own_fourier = FALSE, fourier_terms,
@@ -229,7 +230,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                     arrange(id, abc, date) %>%
                     group_by(id) %>%
                     tk_augment_fourier(date, .periods = fourier_terms, .K = fourier_k) %>%
-                    tk_augment_lags(.value = outcome, .lags = c(1:no_recursive_lag, horizon - 1, horizon, horizon + 1)) %>%
+                    tk_augment_lags(.value = outcome, .lags = c(1:no_recursive_lag, seasonal_frequency - 1, seasonal_frequency, seasonal_frequency + 1)) %>%
                     tk_augment_slidify(
                         contains(paste0("outcome_lag", horizon)),
                         .f = ~mean(.x, na.rm = TRUE),
@@ -245,7 +246,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                     arrange(id, date) %>%
                     group_by(id) %>%
                     tk_augment_fourier(date, .periods = fourier_terms, .K = fourier_k) %>%
-                    tk_augment_lags(.value = outcome, .lags = c(1:no_recursive_lag, horizon - 1, horizon, horizon + 1)) %>%
+                    tk_augment_lags(.value = outcome, .lags = c(1:no_recursive_lag, seasonal_frequency - 1, seasonal_frequency, seasonal_frequency + 1)) %>%
                     tk_augment_slidify(
                         contains(paste0("outcome_lag", horizon)),
                         .f = ~mean(.x, na.rm = TRUE),
@@ -289,7 +290,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                     arrange(id, abc, date) %>%
                     group_by(id) %>%
                     tk_augment_fourier(date, .periods = fourier_terms, .K = fourier_k) %>%
-                    tk_augment_lags(.value = outcome, .lags = horizon) %>%
+                    tk_augment_lags(.value = outcome, .lags = seasonal_frequency) %>%
                     tk_augment_slidify(
                         contains("outcome_lag"),
                         .f = ~mean(.x, na.rm = TRUE),
@@ -305,7 +306,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                     arrange(id, date) %>%
                     group_by(id) %>%
                     tk_augment_fourier(date, .periods = fourier_terms, .K = fourier_k) %>%
-                    tk_augment_lags(.value = outcome, .lags = horizon) %>%
+                    tk_augment_lags(.value = outcome, .lags = seasonal_frequency) %>%
                     tk_augment_slidify(
                         contains("outcome_lag"),
                         .f = ~mean(.x, na.rm = TRUE),
