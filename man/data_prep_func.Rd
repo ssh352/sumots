@@ -33,7 +33,8 @@ data_prep_func(
   fourier_terms,
   recursive_data = FALSE,
   no_recursive_lag,
-  xreg = NULL
+  xreg = NULL,
+  fill_na
 )
 }
 \arguments{

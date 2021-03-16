@@ -37,7 +37,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                            covid_data, horizon = 12, clean = FALSE, drop_na = TRUE,  use_holiday_to_clean = FALSE,
                            holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5,
                            fourier_k = 5, slidify_period = c(4, 8), use_own_fourier = FALSE, fourier_terms,
-                           recursive_data = FALSE, no_recursive_lag, xreg = NULL) {
+                           recursive_data = FALSE, no_recursive_lag, xreg = NULL, fill_na) {
 
     require(tidyverse)
     require(timetk)
@@ -352,11 +352,14 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
         data_prepared_tbl <- full_data_tbl %>%
             filter(!is.na(outcome)) %>%
             drop_na()
-    } else {
+    } else if (!is.null(fill_na)) {
         data_prepared_tbl <- full_data_tbl %>%
             filter(!is.na(outcome)) %>%
             mutate(across(.cols = contains("_lag"),
                           .fns  = ~ replace_na(.x, 0)))
+    } else {
+        data_prepared_tbl <- full_data_tbl %>%
+            filter(!is.na(outcome))
     }
 
 
