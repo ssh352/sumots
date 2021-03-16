@@ -13,7 +13,11 @@ ml_tune(
   parallel_type = "everything",
   return = c("modellist", "modeltable", "both"),
   models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars",
-    "prophet_boost", "lightgbm", "catboost")
+    "prophet_boost", "lightgbm", "catboost"),
+  learn_rate = NULL,
+  min_n = NULL,
+  tree_depth = NULL,
+  loss_reduction = NULL
 )
 }
 \arguments{
@@ -30,6 +34,14 @@ ml_tune(
 \item{return}{What do you want to return. List of workflows, modeltime table or both?}
 
 \item{models}{Choose which models to use. Choose any combination of xgboost, rf, cubist, svm_rbf, svm_poly, glmnet, knn, mars or prophet_boost}
+
+\item{learn_rate}{Upper and lower bound of learning rate to try out during tuning. NULL equals default values from the dials package}
+
+\item{min_n}{Upper and lower bound of min_n to try out during tuning. NULL equals default values from the dials package}
+
+\item{tree_depth}{Upper and lower bound of tree_depth to try out during tuning. NULL equals default values from the dials package}
+
+\item{loss_reduction}{Upper and lower bound of loss_reduction to try out during tuning. NULL equals default values from the dials package}
 
 \item{parallel_over}{A single string containing either "resamples" or "everything" describing how to use parallel processing. See ?control_grid}
 }

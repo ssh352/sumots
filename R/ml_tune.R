@@ -9,12 +9,17 @@
 #' @param models Choose which models to use. Choose any combination of xgboost, rf, cubist, svm_rbf, svm_poly, glmnet, knn, mars or prophet_boost
 #' @param parallel_over A single string containing either "resamples" or "everything" describing how to use parallel processing. See ?control_grid
 #' @param cv_repeats How many CV repeats to use
+#' @param learn_rate Upper and lower bound of learning rate to try out during tuning. NULL equals default values from the dials package
+#' @param min_n Upper and lower bound of min_n to try out during tuning. NULL equals default values from the dials package
+#' @param tree_depth Upper and lower bound of tree_depth to try out during tuning. NULL equals default values from the dials package
+#' @param loss_reduction Upper and lower bound of loss_reduction to try out during tuning. NULL equals default values from the dials package
 
 
 
 ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repeats, parallel_type = "everything",
                     return = c("modellist", "modeltable", "both"),
-                    models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars", "prophet_boost", "lightgbm", "catboost")
+                    models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars", "prophet_boost", "lightgbm", "catboost"),
+                    learn_rate = NULL, min_n = NULL, tree_depth = NULL, loss_reduction = NULL
                     ) {
 
     # Libraries

@@ -9,7 +9,11 @@ wflw_creator(
   ml_recipe,
   resamples_kfold,
   grid_size = grid_size,
-  parallel_type
+  parallel_type,
+  learn_rate,
+  min_n,
+  tree_depth,
+  loss_reduction
 )
 }
 \arguments{

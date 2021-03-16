@@ -38,6 +38,7 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
             scale           = FALSE,
             dropout         = 0.1
         )
+
     } else {
         gluonts_grid <- data.frame(
             epochs          = if (is.null(epochs)) sample(100, size = length, replace = FALSE) else  epochs,
@@ -153,7 +154,7 @@ tune_deepar <- function(id, freq, recipe, horizon, splits, length, cv_slice_limi
 
             cv_accuracy <- wflw_fit_deepar_1 %>%
                 modeltime_table() %>%
-                modeltime_accuracy(testing(resamples_tscv$splits[[j]])) %>%
+                modeltime_accuracy(testing(resamples_tscv$splits[[j]]) %>% filter(!id %in% id_to_remove)) %>%
                 add_column(fold = paste0("fold_", j))
 
             cv_accuracy_summary <- cv_accuracy %>%
