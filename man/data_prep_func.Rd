@@ -34,7 +34,7 @@ data_prep_func(
   recursive_data = FALSE,
   no_recursive_lag,
   xreg = NULL,
-  fill_na
+  fill_na_with_zero
 )
 }
 \arguments{
@@ -90,7 +90,7 @@ data_prep_func(
 
 \item{xreg}{External regressors to add}
 
-\item{fill_na}{Used when drop_na = FALSE. Defaults to 0.}
+\item{fill_na_with_zero}{Used when drop_na = FALSE to fill missing values with zero instead of dropping them.}
 }
 \value{
 List with data_prepared, future_data, train_data, splits and horizon
