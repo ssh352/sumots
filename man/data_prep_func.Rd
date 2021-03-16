@@ -34,7 +34,7 @@ data_prep_func(
   recursive_data = FALSE,
   no_recursive_lag,
   xreg = NULL,
-  fill_na_with_zero
+  fill_na_with_zero = TRUE
 )
 }
 \arguments{
