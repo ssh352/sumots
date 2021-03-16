@@ -13,6 +13,7 @@
 #' @param covid_data Data frame to capture the effect of covid. Has to include one date column and one covid column
 #' @param horizon The forecast horizon
 #' @param drop_na When creating data_prepared_tbl, should NA's be dropped. Defaults to TRUE
+#' @param fill_na Used when drop_na = FALSE. Defaults to 0.
 #' @param clean Should the data be cleand for outliers. Defaults to FALSE
 #' @param use_holiday_to_clean Uses fridagar_one_var from the create_holiday() function to revert series to original value if cleand
 #' @param pacf_threshold Threshold for where to cut the PACF to choose terms for the fourier calculation
@@ -353,7 +354,9 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
             drop_na()
     } else {
         data_prepared_tbl <- full_data_tbl %>%
-            filter(!is.na(outcome))
+            filter(!is.na(outcome)) %>%
+            mutate(across(.cols = contains("_lag"),
+                          .fns  = ~ replace_na(.x, 0)))
     }
 
 

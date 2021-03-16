@@ -88,6 +88,8 @@ data_prep_func(
 \item{no_recursive_lag}{The number of lags to be.}
 
 \item{xreg}{External regressors to add}
+
+\item{fill_na}{Used when drop_na = FALSE. Defaults to 0.}
 }
 \value{
 List with data_prepared, future_data, train_data, splits and horizon
