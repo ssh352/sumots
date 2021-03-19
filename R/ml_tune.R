@@ -13,13 +13,16 @@
 #' @param min_n Upper and lower bound of min_n to try out during tuning. NULL equals default values from the dials package
 #' @param tree_depth Upper and lower bound of tree_depth to try out during tuning. NULL equals default values from the dials package
 #' @param loss_reduction Upper and lower bound of loss_reduction to try out during tuning. NULL equals default values from the dials package
+#' @param include_simple_model_ensemble Should simple average of all the models be included? Defaults to TRUE
+#' @param top_ensemble Creates an ensemble only from the top models. Defaults to 3. Set = NULL if you don't want to use.
 
 
 
 ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repeats, parallel_type = "everything",
                     return = c("modellist", "modeltable", "both"),
                     models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars", "prophet_boost", "lightgbm", "catboost"),
-                    learn_rate = NULL, min_n = NULL, tree_depth = NULL, loss_reduction = NULL
+                    learn_rate = NULL, min_n = NULL, tree_depth = NULL, loss_reduction = NULL,
+                    include_simple_model_ensemble = TRUE, top_ensemble = 3
                     ) {
 
     # Libraries
@@ -32,9 +35,26 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
     require(timetk)
     require(modeltime)
+    require(modeltime.ensemble)
     require(future)
     require(doFuture)
     require(tictoc)
+
+
+    # Create path where models are saved
+    if(!dir.exists("modeltime_table")) {
+        dir.create("modeltime_table")
+    }
+
+    # Create a sub-directory for each tuning process
+    new_dir_name <- paste("Tune",  timestamp(prefix = "", suffix = "", quiet = TRUE), paste0("fold", vfold), paste0("grid", grid_size), sep = "_")
+    new_dir_name <- gsub(" ", "-", new_dir_name)
+    new_dir_name <- gsub(":", "-", new_dir_name)
+
+    dir.create(paste0("modeltime_table/", new_dir_name))
+
+    path_to_file    <- paste0("modeltime_table/", new_dir_name, "/modeltimetable.rds")
+
 
     # Cross validation
     #set.seed(123)
@@ -64,7 +84,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         ) %>%
             set_engine("lightgbm")
 
-        wflw_fit_lightgbm <- wflw_creator(model_spec_lightgbm_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_lightgbm <- wflw_creator(model_spec_lightgbm_tune, recipe_spec_catlight, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                          learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$lightgbm <- wflw_fit_lightgbm$fitted_workflow
 
@@ -74,6 +95,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         finalized_wflw$lightgbm <- wflw_fit_lightgbm$finalized_workflow
 
         tune_plot$lightgbm <- wflw_fit_lightgbm$tune_plot
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
 
         message("Finish tuning Lightgbm")
         toc()
@@ -101,7 +127,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         ) %>%
             set_engine("catboost")
 
-        wflw_fit_catboost <- wflw_creator(model_spec_catboost_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_catboost <- wflw_creator(model_spec_catboost_tune, recipe_spec_catlight, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                          learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$catboost <- wflw_fit_catboost$fitted_workflow
 
@@ -111,6 +138,12 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         finalized_wflw$catboost <- wflw_fit_catboost$finalized_workflow
 
         tune_plot$catboost <- wflw_fit_catboost$tune_plot
+
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
 
         message("Finish tuning Catboost")
         toc()
@@ -137,7 +170,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         ) %>%
             set_engine("xgboost")
 
-        wflw_fit_xgboost <- wflw_creator(model_spec_xgboost_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_xgboost <- wflw_creator(model_spec_xgboost_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                         learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$xgboost <- wflw_fit_xgboost$fitted_workflow
 
@@ -147,6 +181,12 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         finalized_wflw$xgboost <- wflw_fit_xgboost$finalized_workflow
 
         tune_plot$xgboost <- wflw_fit_xgboost$tune_plot
+
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
 
         message("Finish tuning XGBoost")
         toc()
@@ -169,7 +209,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         ) %>%
             set_engine("ranger")
 
-        wflw_fit_rf <- wflw_creator(model_spec_rf_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_rf <- wflw_creator(model_spec_rf_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                    learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$ranger <- wflw_fit_rf$fitted_workflow
 
@@ -179,6 +220,12 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         finalized_wflw$ranger <- wflw_fit_rf$finalized_workflow
 
         tune_plot$ranger <- wflw_fit_rf$tune_plot
+
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
 
         message("Finish tuning Random Forest")
         toc()
@@ -200,7 +247,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         ) %>%
             set_engine("Cubist")
 
-        wflw_fit_cubist <- wflw_creator(model_spec_cubist_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_cubist <- wflw_creator(model_spec_cubist_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                        learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$Cubist <- wflw_fit_cubist$fitted_workflow
 
@@ -210,6 +258,12 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         finalized_wflw$Cubist <- wflw_fit_cubist$finalized_workflow
 
         tune_plot$Cubist <- wflw_fit_cubist$tune_plot
+
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
 
         message("Finish tuning Cubist")
         toc()
@@ -231,18 +285,25 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         ) %>%
             set_engine("kernlab")
 
-        wflw_fit_svm_rbf <- wflw_creator(model_spec_svm_rbf_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_svm_rbf <- wflw_creator(model_spec_svm_rbf_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                         learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$svm_rbf <- wflw_fit_svm_rbf$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_svm_rbf$fitted_workflow %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_svm_rbf$fitted_workflow %>% modeltime_table() %>% mutate(.model_desc = "KERNLAB - RBF"))
 
         finalized_wflw$svm_rbf <- wflw_fit_svm_rbf$finalized_workflow
 
         tune_plot$svm_rbf <- wflw_fit_svm_rbf$tune_plot
 
-        message("Finish tuning SVM (radial basis")
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
+
+        message("Finish tuning SVM (radial basis)")
         toc()
         gc()
 
@@ -264,18 +325,25 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         ) %>%
             set_engine("kernlab")
 
-        wflw_fit_svm_poly <- wflw_creator(model_spec_svm_poly_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_svm_poly <- wflw_creator(model_spec_svm_poly_tune, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                          learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$svm_poly <- wflw_fit_svm_poly$fitted_workflow
 
         model_table <- model_table %>%
-            combine_modeltime_tables(wflw_fit_svm_poly$fitted_workflow %>% modeltime_table())
+            combine_modeltime_tables(wflw_fit_svm_poly$fitted_workflow %>% modeltime_table()%>% mutate(.model_desc = "KERNLAB - Poly"))
 
         finalized_wflw$svm_poly <- wflw_fit_svm_poly$finalized_workflow
 
         tune_plot$svm_poly <- wflw_fit_svm_poly$tune_plot
 
-        message("Finish tuning SVM (polynomial")
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
+
+        message("Finish tuning SVM (polynomial)")
         toc()
         gc()
     }
@@ -294,7 +362,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         ) %>%
             set_engine("glmnet")
 
-        wflw_fit_glmnet <- wflw_creator(model_spec_glmnet, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_glmnet <- wflw_creator(model_spec_glmnet, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                        learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$glmnet <- wflw_fit_glmnet$fitted_workflow
 
@@ -304,6 +373,12 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         finalized_wflw$glmnet <- wflw_fit_glmnet$finalized_workflow
 
         tune_plot$glmnet <- wflw_fit_glmnet$tune_plot
+
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
 
         message("Finish tuning Elastic net")
         toc()
@@ -325,7 +400,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         ) %>%
             set_engine("kknn")
 
-        wflw_fit_knn <- wflw_creator(model_spec_knn, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_knn <- wflw_creator(model_spec_knn, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                     learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$kknn <- wflw_fit_knn$fitted_workflow
 
@@ -335,6 +411,12 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         finalized_wflw$kknn <- wflw_fit_knn$finalized_workflow
 
         tune_plot$kknn <- wflw_fit_knn$tune_plot
+
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
 
         message("Finish tuning KNN")
         toc()
@@ -355,7 +437,8 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         ) %>%
             set_engine("earth")
 
-        wflw_fit_mars <- wflw_creator(model_spec_mars, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_mars <- wflw_creator(model_spec_mars, parsnip_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                      learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$mars <- wflw_fit_mars$fitted_workflow
 
@@ -365,6 +448,12 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         finalized_wflw$mars <- wflw_fit_mars$finalized_workflow
 
         tune_plot$mars <- wflw_fit_mars$tune_plot
+
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
 
         message("Finish tuning MARS")
         toc()
@@ -390,12 +479,15 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
             min_n          = tune(),
             tree_depth     = tune(),
             learn_rate     = tune(),
-            loss_reduction = tune()
+            loss_reduction = tune(),
+            sample_size    = tune()
+
         ) %>%
             set_engine("prophet_xgboost")
 
 
-        wflw_fit_prophet_boost <- wflw_creator(model_spec_prophet, modeltime_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type)
+        wflw_fit_prophet_boost <- wflw_creator(model_spec_prophet, modeltime_recipe, resamples_kfold = resamples_kfold, grid_size, parallel_type,
+                                               learn_rate, min_n, tree_depth, loss_reduction)
 
         model_list$prophet_xgboost <- wflw_fit_prophet_boost$fitted_workflow
 
@@ -406,9 +498,42 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
         tune_plot$prophet_xgboost <- wflw_fit_prophet_boost$tune_plot
 
+
+        # Save the current state of the modeltime table
+        model_table %>%
+            write_rds(path_to_file)
+
+
         message("Finish tuning Prophet Boost")
         toc()
         gc()
+    }
+
+
+    # Create ensemble
+    if (include_simple_model_ensemble) {
+
+        model_table <- model_table %>%
+            ensemble_average(type = "mean") %>%
+            modeltime_table() %>%
+            combine_modeltime_tables(model_table)
+
+    }
+
+    if (!is.null(top_ensemble)) {
+
+        top_models <- model_table %>%
+            modeltime_accuracy(testing(splits)) %>%
+            arrange(rmse) %>%
+            slice_head(n = top_ensemble) %>%
+            pull(.model_id)
+
+        model_table <- model_table %>%
+            filter(.model_id %in% top_models) %>%
+            ensemble_average(type = "mean") %>%
+            modeltime_table() %>%
+            combine_modeltime_tables(model_table)
+
     }
 
 

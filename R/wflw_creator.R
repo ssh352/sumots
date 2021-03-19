@@ -7,7 +7,6 @@
 #' @param resamples_kfold Resamples used for tuning parameters
 #' @param grid_size The size of the grid of parameters
 #'
-#'
 
 wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = grid_size, parallel_type, learn_rate, min_n, tree_depth, loss_reduction) {
 
@@ -19,17 +18,58 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
         add_model(model_spec) %>%
         add_recipe(ml_recipe)
 
-    # tune_results <- tune_grid(
-    #     object     = wflw,
-    #     resamples  = resamples_kfold,
-    #     param_info = parameters(wflw),
-    #     grid       = grid_size,
-    #     control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_type)
-    # )
 
 
+    if(engine %in% c("lightgbm")) {
+        tune_results <- tune_grid(
+            object     = wflw,
+            resamples  = resamples_kfold,
+            param_info = parameters(wflw) %>%
+                update(
+                    sample_size    = sample_prop(range = c(0, 1)),
+                    learn_rate     = if (is.null(learn_rate)) learn_rate(range = c(-10, -1), trans = log10_trans()) else learn_rate(range = c(learn_rate[1], learn_rate[2]), trans = log10_trans()),
+                    min_n          = if (is.null(min_n)) min_n(range = c(2L, 40L), trans = NULL) else min_n(range = c(min_n[1], min_n[2]), trans = NULL),
+                    tree_depth     = if (is.null(tree_depth)) tree_depth(range = c(1L, 15L), trans = NULL) else tree_depth(range = c(tree_depth[1], tree_depth[2]), trans = NULL),
+                    loss_reduction = if (is.null(loss_reduction)) loss_reduction(range = c(-10, 1.5), trans = log10_trans()) else loss_reduction(range = c(loss_reduction[1], loss_reduction[2]), trans = log10_trans())
 
-    if(engine %in% c("lightgbm", "catboost")) {
+                ),
+            grid       = grid_size,
+            control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_type)
+        )
+
+    } else if (engine %in% "catboost") {
+
+        tune_results <- tune_grid(
+            object     = wflw,
+            resamples  = resamples_kfold,
+            param_info = parameters(wflw) %>%
+                update(
+                    sample_size    = sample_prop(range = c(0, 1)),
+                    learn_rate     = if (is.null(learn_rate)) learn_rate(range = c(-10, -1), trans = log10_trans()) else learn_rate(range = c(learn_rate[1], learn_rate[2]), trans = log10_trans()),
+                    min_n          = if (is.null(min_n)) min_n(range = c(2L, 40L), trans = NULL) else min_n(range = c(min_n[1], min_n[2]), trans = NULL),
+                    tree_depth     = if (is.null(tree_depth)) tree_depth(range = c(1L, 15L), trans = NULL) else tree_depth(range = c(tree_depth[1], tree_depth[2]), trans = NULL)
+
+                ),
+            grid       = grid_size,
+            control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_type)
+        )
+
+
+    } else if (engine %in% "ranger") {
+
+        tune_results <- tune_grid(
+            object     = wflw,
+            resamples  = resamples_kfold,
+            param_info = parameters(wflw) %>%
+                update(
+                    min_n          = if (is.null(min_n)) min_n(range = c(2L, 40L), trans = NULL) else min_n(range = c(min_n[1], min_n[2]), trans = NULL)
+                ),
+            grid       = grid_size,
+            control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_type)
+        )
+
+    } else if (engine %in% c("prophet_xgboost", "xgboost")) {
+
         tune_results <- tune_grid(
             object     = wflw,
             resamples  = resamples_kfold,
@@ -47,17 +87,11 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
         )
 
     } else {
+
         tune_results <- tune_grid(
             object     = wflw,
             resamples  = resamples_kfold,
-            param_info = parameters(wflw) %>%
-                update(
-                    learn_rate     = if (is.null(learn_rate)) learn_rate(range = c(-10, -1), trans = log10_trans()) else learn_rate(range = c(learn_rate[1], learn_rate[2]), trans = log10_trans()),
-                    min_n          = if (is.null(min_n)) min_n(range = c(2L, 40L), trans = NULL) else min_n(range = c(min_n[1], min_n[2]), trans = NULL),
-                    tree_depth     = if (is.null(tree_depth)) tree_depth(range = c(1L, 15L), trans = NULL) else tree_depth(range = c(tree_depth[1], tree_depth[2]), trans = NULL),
-                    loss_reduction = if (is.null(loss_reduction)) loss_reduction(range = c(-10, 1.5), trans = log10_trans()) else loss_reduction(range = c(loss_reduction[1], loss_reduction[2]), trans = log10_trans())
-
-                ),
+            param_info = parameters(wflw),
             grid       = grid_size,
             control    = control_grid(verbose = TRUE, allow_par = TRUE, parallel_over = parallel_type)
         )
@@ -67,8 +101,12 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
     best_results <- tune_results %>%
         show_best(metric = "rmse", n = 1)
 
-    tune_plot <- tune_results %>%
-        autoplot()
+    if (grid_size > 1) {
+        tune_plot <- tune_results %>%
+            autoplot()
+
+        return_list$tune_plot <- tune_plot
+    }
 
     fin_wflw <- wflw %>%
         finalize_workflow(parameters = best_results %>% dplyr::slice(1))
@@ -78,7 +116,7 @@ wflw_creator <- function(model_spec, ml_recipe, resamples_kfold, grid_size = gri
 
     return_list$fitted_workflow    <- wflw_fit
     return_list$finalized_workflow <- fin_wflw
-    return_list$tune_plot          <- tune_plot
+
 
 
     return(return_list)
