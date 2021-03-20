@@ -17,7 +17,9 @@ ml_tune(
   learn_rate = NULL,
   min_n = NULL,
   tree_depth = NULL,
-  loss_reduction = NULL
+  loss_reduction = NULL,
+  include_simple_model_ensemble = TRUE,
+  top_ensemble = 3
 )
 }
 \arguments{
@@ -42,6 +44,10 @@ ml_tune(
 \item{tree_depth}{Upper and lower bound of tree_depth to try out during tuning. NULL equals default values from the dials package}
 
 \item{loss_reduction}{Upper and lower bound of loss_reduction to try out during tuning. NULL equals default values from the dials package}
+
+\item{include_simple_model_ensemble}{Should simple average of all the models be included? Defaults to TRUE}
+
+\item{top_ensemble}{Creates an ensemble only from the top models. Defaults to 3. Set = NULL if you don't want to use.}
 
 \item{parallel_over}{A single string containing either "resamples" or "everything" describing how to use parallel processing. See ?control_grid}
 }
