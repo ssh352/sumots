@@ -17,8 +17,6 @@ data_prep_func(
   holidays_to_use_2,
   use_seasonal_lag = TRUE,
   seasonal_frequency,
-  use_covid = FALSE,
-  covid_data,
   horizon = 12,
   clean = FALSE,
   drop_na = TRUE,
@@ -59,10 +57,6 @@ data_prep_func(
 \item{use_seasonal_lag}{Should lag of outcome variable, equal to the seasonality, be used. Defaults to TRUE.}
 
 \item{seasonal_frequency}{The frequency of the data. E.g. 52 for weekly data}
-
-\item{use_covid}{Should information on covid be used. Data frame has to be supplied by user to the covid_data argument}
-
-\item{covid_data}{Data frame to capture the effect of covid. Has to include one date column and one covid column}
 
 \item{horizon}{The forecast horizon}
 

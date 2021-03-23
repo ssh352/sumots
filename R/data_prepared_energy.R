@@ -9,13 +9,13 @@
 #' @param pacf_threshold Threshold to determine which pacf lags to when creating fourier_period. Defaults to 0.2
 #' @param no_fourier_terms Number of fourier periods to include. Defaults to 10
 #' @param fourier_k Maximum order(s) of fourier terms
-#' @param use_horizon_lag Should lag of outcome variable equal to the horizon be used? Defaults to TRUE
+#' @param lags_to_use Should lag of outcome variable be used. Defaults to NULL, replace with desired lag
 #'
 
-prepare_energy_data <- function(data, outcome_var, horizon, xreg_tbl, slidify_period, transformation = "none",
+prepare_energy_data <- function(data, outcome_var, horizon, xreg_tbl, slidify_period = NULL, transformation = "none",
                                 fourier_periods = NULL, drop_na = TRUE, use_holidays = FALSE, holidays_tbl,
                                 pacf_threshold = 0.2, no_fourier_terms = 10, fourier_k = 3,
-                                use_horizon_lag = TRUE, use_own_fourier, own_fourier) {
+                                lags_to_use = NULL, use_own_fourier = FALSE, own_fourier = NULL) {
 
     require(tidyverse)
     require(timetk)
@@ -92,14 +92,14 @@ prepare_energy_data <- function(data, outcome_var, horizon, xreg_tbl, slidify_pe
 
     if (use_own_fourier) {
 
-        if (use_horizon_lag) {
+        if (!is.null(lags_to_use)) {
 
 
             full_data_tbl <- df %>%
                 arrange(id, datetime) %>%
                 group_by(id) %>%
                 tk_augment_fourier(datetime, .periods = own_fourier, .K = fourier_k) %>%
-                tk_augment_lags(.value = outcome, .lags = horizon) %>%
+                tk_augment_lags(.value = outcome, .lags = lags_to_use) %>%
                 tk_augment_slidify(
                     contains("outcome_lag"),
                     .f = ~mean(.x, na.rm = TRUE),
@@ -123,14 +123,14 @@ prepare_energy_data <- function(data, outcome_var, horizon, xreg_tbl, slidify_pe
 
     } else {
 
-        if (use_horizon_lag) {
+        if (!is.null(lags_to_use)) {
 
 
             full_data_tbl <- df %>%
                 arrange(id, datetime) %>%
                 group_by(id) %>%
                 tk_augment_fourier(datetime, .periods = fourier_periods, .K = fourier_k) %>%
-                tk_augment_lags(.value = outcome, .lags = horizon) %>%
+                tk_augment_lags(.value = outcome, .lags = lags_to_use) %>%
                 tk_augment_slidify(
                     contains("outcome_lag"),
                     .f = ~mean(.x, na.rm = TRUE),

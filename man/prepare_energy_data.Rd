@@ -9,7 +9,7 @@ prepare_energy_data(
   outcome_var,
   horizon,
   xreg_tbl,
-  slidify_period,
+  slidify_period = NULL,
   transformation = "none",
   fourier_periods = NULL,
   drop_na = TRUE,
@@ -18,9 +18,9 @@ prepare_energy_data(
   pacf_threshold = 0.2,
   no_fourier_terms = 10,
   fourier_k = 3,
-  use_horizon_lag = TRUE,
-  use_own_fourier,
-  own_fourier
+  lags_to_use = NULL,
+  use_own_fourier = FALSE,
+  own_fourier = NULL
 )
 }
 \arguments{
@@ -42,7 +42,7 @@ prepare_energy_data(
 
 \item{fourier_k}{Maximum order(s) of fourier terms}
 
-\item{use_horizon_lag}{Should lag of outcome variable equal to the horizon be used? Defaults to TRUE}
+\item{lags_to_use}{Should lag of outcome variable be used. Defaults to NULL, replace with desired lag}
 }
 \description{
 Prepares data for energy forecasting
