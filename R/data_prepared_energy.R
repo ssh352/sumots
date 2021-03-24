@@ -12,7 +12,7 @@
 #' @param lags_to_use Should lag of outcome variable be used. Defaults to NULL, replace with desired lag
 #'
 
-prepare_energy_data <- function(data, outcome_var, horizon, xreg_tbl, slidify_period = NULL, transformation = "none",
+prepare_energy_data <- function(data, outcome_var, horizon, xreg_tbl = NULL, slidify_period = NULL, transformation = "none",
                                 fourier_periods = NULL, drop_na = TRUE, use_holidays = FALSE, holidays_tbl,
                                 pacf_threshold = 0.2, no_fourier_terms = 10, fourier_k = 3,
                                 lags_to_use = NULL, use_own_fourier = FALSE, own_fourier = NULL) {
@@ -86,7 +86,7 @@ prepare_energy_data <- function(data, outcome_var, horizon, xreg_tbl, slidify_pe
 
     # Full data
     if (is.null(slidify_period)) {
-        slidify_period <- c(1/4, 1/3, 1/2, 1) * horzion
+        slidify_period <- c(1/4, 1/3, 1/2, 1) * horizon
         slidify_period <- round(slidify_period, 0)
     }
 
