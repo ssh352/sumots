@@ -8,7 +8,7 @@ prepare_energy_data(
   data,
   outcome_var,
   horizon,
-  xreg_tbl,
+  xreg_tbl = NULL,
   slidify_period = NULL,
   transformation = "none",
   fourier_periods = NULL,

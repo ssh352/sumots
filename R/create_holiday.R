@@ -4,11 +4,12 @@
 #' @param lead_lag_one TRUE if lead and lag of the dummy are also 1 instead of -0.5 for lag and 0.5 for lead to capture different effect of lead and lag holiday
 #' @param create_lead_lag Should leads and lags be created
 #' @param to_weekly Should data be converted to weekly data. Defaults to TRUE.
+#' @param one_holiday_per_week If there are two holidays taking place on same week, should only one be select. Default to FALSE since this could change over time.
 #'
 #' @returns Returns list with two data set: holidays_for_ml which is for ML algos and holidays_for_clean which will be used when cleaning the data
 
 
-create_holiday <- function(data, to_weekly = TRUE, create_lead_lag = TRUE, lead_lag_one = TRUE) {
+create_holiday <- function(data, to_weekly = TRUE, create_lead_lag = TRUE, lead_lag_one = TRUE, one_holiday_per_week = FALSE) {
 
 
     # Bý til breytu fyrir alla daga frá 1990 til 2040
@@ -23,18 +24,37 @@ create_holiday <- function(data, to_weekly = TRUE, create_lead_lag = TRUE, lead_
     date_tbl <- tibble(date = date_variable)
 
     if (to_weekly) {
-        # Bý til wide format af frídögum með heitið holiday_
-        holiday_factor <- data %>%
-            mutate(date = as.Date(date),
-                   date = floor_date(date, "week", week_start = 1)) %>%
-            group_by(date) %>%
-            dplyr::slice(1) %>%
-            # group_by(year) %>%
-            # mutate(holiday_factor = paste("holiday", 1:n(), sep = "_")) %>%
-            # ungroup() %>%
-            # select(-c(holiday, year)) %>%
-            mutate(helper = 1) %>%
-            pivot_wider(names_from = holiday, values_from = helper)
+
+        if (one_holiday_per_week) {
+            # Bý til wide format af frídögum með heitið holiday_
+            holiday_factor <- data %>%
+                mutate(date = as.Date(date),
+                       date = floor_date(date, "week", week_start = 1)) %>%
+                group_by(date) %>%
+                dplyr::slice(1) %>%
+                # group_by(year) %>%
+                # mutate(holiday_factor = paste("holiday", 1:n(), sep = "_")) %>%
+                # ungroup() %>%
+                # select(-c(holiday, year)) %>%
+                mutate(helper = 1) %>%
+                pivot_wider(names_from = holiday, values_from = helper)
+
+        } else {
+            # Bý til wide format af frídögum með heitið holiday_
+            holiday_factor <- data %>%
+                mutate(date = as.Date(date),
+                       date = floor_date(date, "week", week_start = 1)) %>%
+                group_by(date) %>%
+                #dplyr::slice(1) %>%
+                # group_by(year) %>%
+                # mutate(holiday_factor = paste("holiday", 1:n(), sep = "_")) %>%
+                # ungroup() %>%
+                # select(-c(holiday, year)) %>%
+                mutate(helper = 1) %>%
+                pivot_wider(names_from = holiday, values_from = helper)
+
+        }
+
 
 
         # Bý til lead og lag fyrir hvern frídag

@@ -8,7 +8,8 @@ create_holiday(
   data,
   to_weekly = TRUE,
   create_lead_lag = TRUE,
-  lead_lag_one = TRUE
+  lead_lag_one = TRUE,
+  one_holiday_per_week = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ create_holiday(
 \item{create_lead_lag}{Should leads and lags be created}
 
 \item{lead_lag_one}{TRUE if lead and lag of the dummy are also 1 instead of -0.5 for lag and 0.5 for lead to capture different effect of lead and lag holiday}
+
+\item{one_holiday_per_week}{If there are two holidays taking place on same week, should only one be select. Default to FALSE since this could change over time.}
 }
 \value{
 Returns list with two data set: holidays_for_ml which is for ML algos and holidays_for_clean which will be used when cleaning the data
