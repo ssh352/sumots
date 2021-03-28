@@ -23,7 +23,7 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
                     return = c("modellist", "modeltable", "both"),
                     models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars", "prophet_boost", "lightgbm", "catboost"),
                     learn_rate = NULL, min_n = NULL, tree_depth = NULL, loss_reduction = NULL, save_modeltime_table = TRUE,
-                    include_simple_model_ensemble = TRUE, top_ensemble = 3
+                    include_simple_model_ensemble = FALSE, top_ensemble = NULL
                     ) {
 
     # Libraries
