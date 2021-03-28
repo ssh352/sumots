@@ -15,13 +15,14 @@
 #' @param loss_reduction Upper and lower bound of loss_reduction to try out during tuning. NULL equals default values from the dials package
 #' @param include_simple_model_ensemble Should simple average of all the models be included? Defaults to TRUE
 #' @param top_ensemble Creates an ensemble only from the top models. Defaults to 3. Set = NULL if you don't want to use.
+#' @param save_modeltime_table Should modeltime table be saved after tuning each algorithm. Defaults to TRUE
 
 
 
 ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repeats, parallel_type = "everything",
                     return = c("modellist", "modeltable", "both"),
                     models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars", "prophet_boost", "lightgbm", "catboost"),
-                    learn_rate = NULL, min_n = NULL, tree_depth = NULL, loss_reduction = NULL,
+                    learn_rate = NULL, min_n = NULL, tree_depth = NULL, loss_reduction = NULL, save_modeltime_table = TRUE,
                     include_simple_model_ensemble = TRUE, top_ensemble = 3
                     ) {
 
@@ -97,8 +98,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
         tune_plot$lightgbm <- wflw_fit_lightgbm$tune_plot
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning Lightgbm")
@@ -141,8 +145,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning Catboost")
@@ -184,8 +191,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning XGBoost")
@@ -223,8 +233,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning Random Forest")
@@ -261,8 +274,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning Cubist")
@@ -299,8 +315,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning SVM (radial basis)")
@@ -339,8 +358,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning SVM (polynomial)")
@@ -376,8 +398,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning Elastic net")
@@ -414,8 +439,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning KNN")
@@ -451,8 +479,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning MARS")
@@ -500,8 +531,11 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
         # Save the current state of the modeltime table
-        model_table %>%
-            write_rds(path_to_file)
+        if(save_modeltime_table) {
+            model_table %>%
+                write_rds(path_to_file)
+        }
+
 
 
         message("Finish tuning Prophet Boost")

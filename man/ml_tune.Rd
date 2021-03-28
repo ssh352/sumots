@@ -18,6 +18,7 @@ ml_tune(
   min_n = NULL,
   tree_depth = NULL,
   loss_reduction = NULL,
+  save_modeltime_table = TRUE,
   include_simple_model_ensemble = TRUE,
   top_ensemble = 3
 )
@@ -44,6 +45,8 @@ ml_tune(
 \item{tree_depth}{Upper and lower bound of tree_depth to try out during tuning. NULL equals default values from the dials package}
 
 \item{loss_reduction}{Upper and lower bound of loss_reduction to try out during tuning. NULL equals default values from the dials package}
+
+\item{save_modeltime_table}{Should modeltime table be saved after tuning each algorithm. Defaults to TRUE}
 
 \item{include_simple_model_ensemble}{Should simple average of all the models be included? Defaults to TRUE}
 
