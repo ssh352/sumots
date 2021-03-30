@@ -43,18 +43,21 @@ ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repea
 
 
     # Create path where models are saved
-    if(!dir.exists("modeltime_table")) {
-        dir.create("modeltime_table")
+    if (save_modeltime_table) {
+        if(!dir.exists("modeltime_table")) {
+            dir.create("modeltime_table")
+        }
+
+        # Create a sub-directory for each tuning process
+        new_dir_name <- paste("Tune",  timestamp(prefix = "", suffix = "", quiet = TRUE), paste0("fold", vfold), paste0("grid", grid_size), sep = "_")
+        new_dir_name <- gsub(" ", "-", new_dir_name)
+        new_dir_name <- gsub(":", "-", new_dir_name)
+
+        dir.create(paste0("modeltime_table/", new_dir_name))
+
+        path_to_file    <- paste0("modeltime_table/", new_dir_name, "/modeltimetable.rds")
+
     }
-
-    # Create a sub-directory for each tuning process
-    new_dir_name <- paste("Tune",  timestamp(prefix = "", suffix = "", quiet = TRUE), paste0("fold", vfold), paste0("grid", grid_size), sep = "_")
-    new_dir_name <- gsub(" ", "-", new_dir_name)
-    new_dir_name <- gsub(":", "-", new_dir_name)
-
-    dir.create(paste0("modeltime_table/", new_dir_name))
-
-    path_to_file    <- paste0("modeltime_table/", new_dir_name, "/modeltimetable.rds")
 
 
     # Cross validation

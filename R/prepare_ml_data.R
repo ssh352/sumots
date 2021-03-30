@@ -29,10 +29,10 @@
 #' @return List with data_prepared, future_data, train_data, splits and horizon
 
 
-data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size = 52,
+data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size,
                            trailing_zero = FALSE, transformation = "none", use_holidays = FALSE,
                            holidays_to_use_1, holidays_to_use_2, use_seasonal_lag = TRUE, seasonal_frequency,
-                           horizon = 12, clean = FALSE, drop_na = TRUE,  use_holiday_to_clean = FALSE,
+                           horizon, clean = FALSE, drop_na = TRUE,  use_holiday_to_clean = FALSE,
                            holiday_for_clean,  use_abc_category = FALSE, pacf_threshold = 0.2, no_fourier_terms = 5,
                            fourier_k = 5, slidify_period = c(4, 8), use_own_fourier = FALSE, fourier_terms,
                            recursive_data = FALSE, no_recursive_lag, xreg = NULL, fill_na_with_zero = TRUE) {
