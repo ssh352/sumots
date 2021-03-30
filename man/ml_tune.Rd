@@ -7,6 +7,7 @@
 ml_tune(
   parsnip_recipe,
   modeltime_recipe,
+  recipe_spec_catlight,
   vfold,
   grid_size,
   cv_repeats,
@@ -19,14 +20,16 @@ ml_tune(
   tree_depth = NULL,
   loss_reduction = NULL,
   save_modeltime_table = TRUE,
-  include_simple_model_ensemble = TRUE,
-  top_ensemble = 3
+  include_simple_model_ensemble = FALSE,
+  top_ensemble = NULL
 )
 }
 \arguments{
 \item{parsnip_recipe}{Recipe for parsnip models}
 
 \item{modeltime_recipe}{Recipe for modeltime models}
+
+\item{recipe_spec_catlight}{Recipes for catboost and lightgbm}
 
 \item{vfold}{Number of folds used in K-fold cross validation}
 

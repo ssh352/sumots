@@ -3,6 +3,7 @@
 #' ml_tune() will tune up to nine different ML algorithms used in forecasting
 #' @param parsnip_recipe Recipe for parsnip models
 #' @param modeltime_recipe Recipe for modeltime models
+#' @param recipe_spec_catlight Recipes for catboost and lightgbm
 #' @param vfold Number of folds used in K-fold cross validation
 #' @param grid_size The size of the hyperparameter grid used for tuning the parameters
 #' @param return What do you want to return. List of workflows, modeltime table or both?
@@ -19,7 +20,7 @@
 
 
 
-ml_tune <- function(parsnip_recipe, modeltime_recipe, vfold, grid_size, cv_repeats, parallel_type = "everything",
+ml_tune <- function(parsnip_recipe, modeltime_recipe, recipe_spec_catlight, vfold, grid_size, cv_repeats, parallel_type = "everything",
                     return = c("modellist", "modeltable", "both"),
                     models = c("xgboost", "rf", "cubist", "svm_rbf", "svm_poly", "glmnet", "knn", "mars", "prophet_boost", "lightgbm", "catboost"),
                     learn_rate = NULL, min_n = NULL, tree_depth = NULL, loss_reduction = NULL, save_modeltime_table = TRUE,
