@@ -48,6 +48,9 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     df <- data %>%
         rename("outcome" = outcome_var)
 
+    df <- df %>%
+        arrange(id, date)
+
 
     # Negative values
     if(negative_to_zero) {
