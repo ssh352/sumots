@@ -65,6 +65,9 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     # Gap size
     if (fix_gap_size) {
         df <- df %>%
+            group_by(id) %>%
+            mutate(max_date = max(date)) %>%
+            ungroup() %>%
             complete(id, date) %>%
             mutate(outcome = ifelse(is.na(outcome), 0, outcome)) %>%
             fill(-outcome, .direction = "down") %>%
@@ -72,7 +75,8 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
 
             # leading zeros first
             mutate(cumsum_sala = cumsum(outcome)) %>%
-            filter(cumsum_sala > 0) %>%
+            filter(cumsum_sala > 0, date <= max_date) %>%
+            select(-max_date) %>%
 
             # choose only items with sales in the past 52 weeks
             mutate(no_sala = ifelse(outcome == 0, 1, 0)) %>%
@@ -84,11 +88,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                    cum_indicator = cumsum(indicator)) %>%
             filter(cum_indicator >= 1) %>%
             select(-c(cumsum_sala, no_sala, cum_no_sala, indicator, cum_indicator)) %>%
-            ungroup()
-
-    } else {
-        df
-    }
+            ungroup()}
 
 
 
@@ -113,7 +113,8 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
             filter(cumsum_zero > 0) %>%
             ungroup() %>%
             # drop_na(ft) %>%
-            select(-contains("zero"), -contains("cumsum"))
+            select(-contains("zero"), -contains("cumsum")) %>%
+            drop_na()
 
     }
 
