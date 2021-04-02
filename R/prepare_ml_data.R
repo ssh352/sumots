@@ -156,7 +156,8 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
 
     if (!is.null(xreg)) {
         df <- df %>%
-            left_join(xreg) %>%
+            left_join(xreg, by = "date") %>%
+            group_by(id) %>%
             fill(-outcome, .direction = "down")
     }
 
