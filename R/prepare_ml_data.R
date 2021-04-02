@@ -144,12 +144,15 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
 
     # Future and prepared data
     df <- df %>%
+        ungroup() %>%
+        complete(date, id) %>%
+        replace_na(list(outcome = 0)) %>%
         mutate(id = as_factor(id)) %>%
         group_by(id) %>%
         future_frame(date, .length_out = horizon, .bind_data = TRUE) %>%
         fill(-outcome, .direction = "down") %>%
-        ungroup()
-
+        ungroup() %>%
+        drop_na(-outcome)
 
     if (!is.null(xreg)) {
         df <- df %>%
