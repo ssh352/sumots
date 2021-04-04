@@ -228,7 +228,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                     tk_augment_fourier(date, .periods = fourier_terms, .K = fourier_k) %>%
                     tk_augment_lags(.value = outcome, .lags = c(1:no_recursive_lag, seasonal_frequency - 1, seasonal_frequency, seasonal_frequency + 1)) %>%
                     tk_augment_slidify(
-                        contains(paste0("outcome_lag", horizon)),
+                        contains(paste0("outcome_lag", seasonal_frequency)),
                         .f = ~mean(.x, na.rm = TRUE),
                         .period  = slidify_period,
                         .partial = TRUE,
@@ -244,7 +244,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                     tk_augment_fourier(date, .periods = fourier_terms, .K = fourier_k) %>%
                     tk_augment_lags(.value = outcome, .lags = c(1:no_recursive_lag, seasonal_frequency - 1, seasonal_frequency, seasonal_frequency + 1)) %>%
                     tk_augment_slidify(
-                        contains(paste0("outcome_lag", horizon)),
+                        contains(paste0("outcome_lag", seasonal_frequency)),
                         .f = ~mean(.x, na.rm = TRUE),
                         .period  = slidify_period,
                         .partial = TRUE,
