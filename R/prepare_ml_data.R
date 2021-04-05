@@ -44,6 +44,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     # return list
     return_list <- list()
 
+
     # Rename outcome
     df <- data %>%
         rename("outcome" = outcome_var)
@@ -380,6 +381,12 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
 
 
     # Train data
+
+    freq_name <- case_when(seasonal_frequency == 12 ~ "month",
+                           seasonal_frequency == 52 ~ "week",
+                           seasonal_frequency >= 360 ~ "year",
+                           TRUE ~ "day")
+
     if(clean) {
         if (use_holiday_to_clean) {
 
@@ -390,18 +397,38 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
 
             date_tbl <- tibble(date = date_variable)
 
-            holiday_clean_date <- date_tbl %>%
-                mutate(date = floor_date(date, "week", week_start = 1)) %>%
-                distinct() %>%
-                left_join(holiday_for_clean) %>%
-                mutate(holiday = ifelse(is.na(value), 0, 1)) %>%
-                mutate(lead_holiday = lead(holiday),
-                       lag_holiday  = lag(holiday)) %>%
-                replace(is.na(.), 0) %>%
-                mutate(value = rowSums(. [2:4])) %>%
-                mutate(value = ifelse(value == 0, 0, 1)) %>%
-                select(-contains("holiday")) %>%
-                rename("holiday" = "value")
+            if (freq_name == "week") {
+
+                holiday_clean_date <- date_tbl %>%
+                    mutate(date = floor_date(date, "week", week_start = 1)) %>%
+                    distinct() %>%
+                    left_join(holiday_for_clean) %>%
+                    mutate(holiday = ifelse(is.na(value), 0, 1)) %>%
+                    mutate(lead_holiday = lead(holiday),
+                           lag_holiday  = lag(holiday)) %>%
+                    replace(is.na(.), 0) %>%
+                    mutate(value = rowSums(. [2:4])) %>%
+                    mutate(value = ifelse(value == 0, 0, 1)) %>%
+                    select(-contains("holiday")) %>%
+                    rename("holiday" = "value")
+
+            } else {
+
+                holiday_clean_date <- date_tbl %>%
+                    mutate(date = floor_date(date, freq_name)) %>%
+                    distinct() %>%
+                    left_join(holiday_for_clean) %>%
+                    mutate(holiday = ifelse(is.na(value), 0, 1)) %>%
+                    mutate(lead_holiday = lead(holiday),
+                           lag_holiday  = lag(holiday)) %>%
+                    replace(is.na(.), 0) %>%
+                    mutate(value = rowSums(. [2:4])) %>%
+                    mutate(value = ifelse(value == 0, 0, 1)) %>%
+                    select(-contains("holiday")) %>%
+                    rename("holiday" = "value")
+
+            }
+
 
             if (transformation == "log") {
                 train_data <- training(splits) %>%
