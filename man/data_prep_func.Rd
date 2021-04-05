@@ -10,6 +10,7 @@ data_prep_func(
   negative_to_zero = FALSE,
   fix_gap_size = FALSE,
   max_gap_size,
+  remove_one_obs = FALSE,
   trailing_zero = FALSE,
   transformation = "none",
   use_holidays = FALSE,

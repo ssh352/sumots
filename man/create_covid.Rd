@@ -4,7 +4,7 @@
 \alias{create_covid}
 \title{Creates dummy variable for Covid}
 \usage{
-create_covid(data, fjolda_mork)
+create_covid(data, fjolda_mork, horizon, freq)
 }
 \arguments{
 \item{data}{Data frame with one date column named date and one covid column named covid}

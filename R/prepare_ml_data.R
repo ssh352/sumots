@@ -29,7 +29,7 @@
 #' @return List with data_prepared, future_data, train_data, splits and horizon
 
 
-data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size,
+data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_size = FALSE, max_gap_size, remove_one_obs = FALSE,
                            trailing_zero = FALSE, transformation = "none", use_holidays = FALSE,
                            holidays_to_use_1, holidays_to_use_2, use_seasonal_lag = TRUE, seasonal_frequency,
                            horizon, clean = FALSE, drop_na = TRUE,  use_holiday_to_clean = FALSE,
@@ -130,17 +130,20 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
     }
 
     # Remove ID with one obs
-    one_obs_id_tbl <- df %>%
-        group_by(id) %>%
-        mutate(no_obs = n()) %>%
-        filter(no_obs == 1) %>%
-        pull(id)
+    if (remove_one_obs) {
+        one_obs_id_tbl <- df %>%
+            group_by(id) %>%
+            mutate(no_obs = n()) %>%
+            filter(no_obs == 1) %>%
+            pull(id)
 
-    df <- df %>%
-        group_by(id) %>%
-        mutate(no_obs = n()) %>%
-        filter(no_obs > 1) %>%
-        select(-no_obs)
+        df <- df %>%
+            group_by(id) %>%
+            mutate(no_obs = n()) %>%
+            filter(no_obs > 1) %>%
+            select(-no_obs)
+
+    }
 
     # Future and prepared data
     df <- df %>%
@@ -209,7 +212,7 @@ data_prep_func <- function(data, outcome_var, negative_to_zero = FALSE, fix_gap_
                 pull(lag)
         }
 
-        fourier_periods <- c(fourier_periods, 52/2,  52)
+        fourier_periods <- c(fourier_periods, seasonal_frequency/2,  seasonal_frequency)
         fourier_periods <- unique(fourier_periods)
 
         fourier_terms <- fourier_periods
